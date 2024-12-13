@@ -1,0 +1,43 @@
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: ${GITHUB_CLIENT_ID}
+            client-secret: ${GITHUB_CLIENT_SECRET}
+            scope: user:email, read:user
+          google:
+            client-id: 504510712661-dlliasc5r38u1dgd1a5jl87bci7u5ire.apps.googleusercontent.com
+            client-secret: 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
+            scope: email, profile
+  
+  datasource:
+    url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/authdb}
+    username: ${POSTGRES_USER:}
+    password: ${POSTGRES_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  
+server:
+  port: 9000
+
+management:
+  endpoints:
+    web:
+      base-path: ""
+      path-mapping:
+        health: health
+  health:
+    ldap:
+      enabled: false
+      
+app:
+  jwt:
+    secret: "bJkgT1OgzUjViJDiOv0msKVBwqVy5IXCmtA1oGN0yB9bcR6CbRbpDEg5pLHHGkQFtZe7AqJ+1bWv+dDF3A96mg=="
+    expiration: 86400000 # 24 hours

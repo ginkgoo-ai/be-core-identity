@@ -4,16 +4,22 @@
 
 ### Completed ✅
 
-* OAuth 2.0 Core Implementation
-* Google Social Login Integration
+* OAuth 2.0 Implementation
+  * Support SPA with PKCE
+  * OAuth Consent
+  * JWT with Management
+  * OIDC
+  * OAuth Client Reistration Endpoint
+  * Client Registration Endpoint
+* Form Login
+* Self-Registration
+* Password Recovery
+* Multi-Factor Authentication (Email)
 
 ### In Progress 🚧
 
 * Additional Social Login Integration
-* Self-Registration
-* Password Recovery
 * Multi-Factor Authentication (SMS)
-* Multi-Factor Authentication (Email)
 
 ## Tech Stack
 

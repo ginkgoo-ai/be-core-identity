@@ -1,21 +1,17 @@
+authorization-server-uri: ${scheme}://${core_identity_host}:${core_identity_port}
+
+server:
+  port: 9000
+  shutdown: graceful
+
 spring:
-  security:
-    oauth2:
-      client:
-        registration:
-          github:
-            client-id: ${GITHUB_CLIENT_ID}
-            client-secret: ${GITHUB_CLIENT_SECRET}
-            scope: user:email, read:user
-          google:
-            client-id: 504510712661-dlliasc5r38u1dgd1a5jl87bci7u5ire.apps.googleusercontent.com
-            client-secret: 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
-            scope: email, profile
-  
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+    
   datasource:
-    url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/authdb}
-    username: ${POSTGRES_USER:}
-    password: ${POSTGRES_PASSWORD:}
+    url: jdbc:postgresql://${postgres_host}:${postgres_port}/${postgres_db}
+    username: ${postgres_user}
+    password: ${postgres_password}
     driver-class-name: org.postgresql.Driver
   
   jpa:
@@ -24,8 +20,26 @@ spring:
       ddl-auto: update
     show-sql: true
   
-server:
-  port: 9000
+  data:
+    redis:
+      host: ${redis_host}
+      port: ${redis_port}
+
+  mail:
+    host: ${mail_host}
+    port: ${mail_port}
+    username: ${mail_username}
+    password: ${mail_password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+    from: ${MAIL_FROM}
+    app-url: ${APP_URL}
+
+
 
 management:
   endpoints:
@@ -36,8 +50,41 @@ management:
   health:
     ldap:
       enabled: false
-      
+
 app:
   jwt:
-    secret: "bJkgT1OgzUjViJDiOv0msKVBwqVy5IXCmtA1oGN0yB9bcR6CbRbpDEg5pLHHGkQFtZe7AqJ+1bWv+dDF3A96mg=="
-    expiration: 86400000 # 24 hours
+  verification:
+    strategy: URL_TOKEN  # Default verification strategy (CODE or URL_TOKEN)
+    code:
+      length: 6
+      expiration: 300  # 5 minutes in seconds
+      cooldown: 60     # 1 minute in seconds
+    url-token:
+      expiration: 900  # 15 minutes in seconds
+      cooldown: 60     # 1 minute in seconds
+    server-url: ${authorization-server-uri:http://localhost:9000}
+    redirect-url: ${authorization-server-uri:http://localhost:9000}
+
+
+logging:
+  level:
+    com.benwk.ginkgoocoreidentity: trace 
+    org.springframework: trace 
+security:
+  admin:
+    ip-whitelist:
+      - "10.0.0.0/8"
+      - "192.168.0.0/16"
+    api-key: "${ADMIN_API_KEY:dBj8kX7vYp4mN9qR2tW5hL1cF3nM6sQ9wZ0xV8yU4jK7gH2bP5}"
+    rate-limit: 10
+  jwt:
+    authority-prefix: "ROLE_"
+    authorities-claim-name: "authorities"
+  cors:
+    allowed-origins:
+      - "http://127.0.0.1:3000"
+      - "http://127.0.0.1:8080"
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs

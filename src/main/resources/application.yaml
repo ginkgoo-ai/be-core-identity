@@ -1,21 +1,8 @@
 spring:
-  security:
-    oauth2:
-      client:
-        registration:
-          github:
-            client-id: ${GITHUB_CLIENT_ID}
-            client-secret: ${GITHUB_CLIENT_SECRET}
-            scope: user:email, read:user
-          google:
-            client-id: 504510712661-dlliasc5r38u1dgd1a5jl87bci7u5ire.apps.googleusercontent.com
-            client-secret: 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
-            scope: email, profile
-  
   datasource:
-    url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/authdb}
-    username: ${POSTGRES_USER:}
-    password: ${POSTGRES_PASSWORD:}
+    url: ${POSTGRES_URL:jdbc:postgresql://localhost:15432/identity}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
   
   jpa:
@@ -24,6 +11,26 @@ spring:
       ddl-auto: update
     show-sql: true
   
+  data:
+    redis:
+      host: localhost
+      port: 16379
+      
+  mail:
+    host: smtp.mailtrap.io
+    port: 2525
+    username: fd21a8aeaf0fbc
+    password: 3980d9842d1fb5
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+    from: sandbox.smtp.mailtrap.io
+    app-url: http://localhost:9000
+
+
 server:
   port: 9000
 
@@ -36,8 +43,43 @@ management:
   health:
     ldap:
       enabled: false
-      
+
 app:
   jwt:
-    secret: "bJkgT1OgzUjViJDiOv0msKVBwqVy5IXCmtA1oGN0yB9bcR6CbRbpDEg5pLHHGkQFtZe7AqJ+1bWv+dDF3A96mg=="
-    expiration: 86400000 # 24 hours
+#    secret: "bJkgT1OgzUjViJDiOv0msKVBwqVy5IXCmtA1oGN0yB9bcR6CbRbpDEg5pLHHGkQFtZe7AqJ+1bWv+dDF3A96mg=="
+#    expiration: 86400000 # 24 hours
+  default-redirect-uri: "http://localhost:3000"
+  verification:
+    strategy: URL_TOKEN  # Default verification strategy (CODE or URL_TOKEN)
+    code:
+      length: 6
+      expiration: 300  # 5 minutes in seconds
+      cooldown: 60     # 1 minute in seconds
+    url-token:
+      expiration: 900  # 15 minutes in seconds
+      cooldown: 60     # 1 minute in seconds
+    server-url: ${APP_VERIFICATION_SERVER_URL:http://localhost:9000}
+    redirect-url: ${APP_VERIFICATION_REDIRECT_URL:http://localhost:9000}
+
+
+logging:
+  level:
+    com.benwk.ginkgoocoreidentity: trace 
+    org.springframework: trace 
+security:
+  admin:
+    ip-whitelist:
+      - "10.0.0.0/8"
+      - "192.168.0.0/16"
+    api-key: "${ADMIN_API_KEY:dBj8kX7vYp4mN9qR2tW5hL1cF3nM6sQ9wZ0xV8yU4jK7gH2bP5}"
+    rate-limit: 10
+  jwt:
+    authority-prefix: "ROLE_"
+    authorities-claim-name: "authorities"
+  cors:
+    allowed-origins:
+      - "http://localhost:3000"
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs

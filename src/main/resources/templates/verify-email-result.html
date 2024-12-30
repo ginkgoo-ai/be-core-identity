@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification - Ginkgoo Identity</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="min-h-screen bg-gray-50 flex items-center justify-center">
+<div class="max-w-md w-full mx-auto p-6">
+    <div class="bg-white rounded-lg shadow-lg p-8 text-center">
+        <!-- Success State -->
+        <div th:if="${verified}" class="space-y-6">
+            <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                <i class="fas fa-check text-3xl text-green-600"></i>
+            </div>
+
+            <h2 class="text-2xl font-bold text-gray-900">
+                Email Verified Successfully
+            </h2>
+
+            <p class="text-gray-600">
+                Your email has been verified.
+                <span th:if="${autoRedirect}">Redirecting to application...</span>
+            </p>
+
+            <div class="mt-8" th:if="${redirectUrl}">
+                <a th:href="${redirectUrl}"
+                   class="inline-flex justify-center rounded-md bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                    Continue to Application
+                </a>
+            </div>
+        </div>
+
+        <!-- Error State -->
+        <div th:unless="${verified}" class="space-y-6">
+            <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+                <i class="fas fa-times text-3xl text-red-600"></i>
+            </div>
+
+            <h2 class="text-2xl font-bold text-gray-900">
+                Verification Failed
+            </h2>
+
+            <p class="text-gray-600" th:text="${errorMessage}">
+                Your email address could not be verified.
+            </p>
+
+            <div class="mt-8">
+                <a href="/login"
+                   class="inline-flex justify-center rounded-md bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                    Back to Sign In
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Auto redirect script for success case -->
+<script th:if="${verified and autoRedirect and redirectUrl}">
+  setTimeout(function() {
+    window.location.href = /*[[${redirectUrl}]]*/ '';
+  }, /*[[${redirectDelay}]]*/ 3000);
+</script>
+</body>
+</html>

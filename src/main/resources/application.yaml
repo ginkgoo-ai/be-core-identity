@@ -1,17 +1,8 @@
-authorization-server-uri: ${scheme}://${core_identity_host}:${core_identity_port}
-
-server:
-  port: 9000
-  shutdown: graceful
-
 spring:
-  lifecycle:
-    timeout-per-shutdown-phase: 30s
-    
   datasource:
-    url: jdbc:postgresql://${postgres_host}:${postgres_port}/${postgres_db}
-    username: ${postgres_user}
-    password: ${postgres_password}
+    url: ${POSTGRES_URL:jdbc:postgresql://localhost:15432/identity}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
   
   jpa:
@@ -22,24 +13,26 @@ spring:
   
   data:
     redis:
-      host: ${redis_host}
-      port: ${redis_port}
-
+      host: localhost
+      port: 16379
+      
   mail:
-    host: ${mail_host}
-    port: ${mail_port}
-    username: ${mail_username}
-    password: ${mail_password}
+    host: smtp.mailtrap.io
+    port: 2525
+    username: fd21a8aeaf0fbc
+    password: 3980d9842d1fb5
     properties:
       mail:
         smtp:
           auth: true
           starttls:
             enable: true
-    from: ${MAIL_FROM}
-    app-url: ${APP_URL}
+    from: sandbox.smtp.mailtrap.io
+    app-url: http://localhost:9000
 
 
+server:
+  port: 9000
 
 management:
   endpoints:
@@ -53,6 +46,9 @@ management:
 
 app:
   jwt:
+#    secret: "bJkgT1OgzUjViJDiOv0msKVBwqVy5IXCmtA1oGN0yB9bcR6CbRbpDEg5pLHHGkQFtZe7AqJ+1bWv+dDF3A96mg=="
+#    expiration: 86400000 # 24 hours
+  default-redirect-uri: "http://localhost:3000"
   verification:
     strategy: URL_TOKEN  # Default verification strategy (CODE or URL_TOKEN)
     code:
@@ -62,8 +58,8 @@ app:
     url-token:
       expiration: 900  # 15 minutes in seconds
       cooldown: 60     # 1 minute in seconds
-    server-url: ${authorization-server-uri:http://localhost:9000}
-    redirect-url: ${authorization-server-uri:http://localhost:9000}
+    server-url: ${APP_VERIFICATION_SERVER_URL:http://localhost:9000}
+    redirect-url: ${APP_VERIFICATION_REDIRECT_URL:http://localhost:9000}
 
 
 logging:
@@ -82,8 +78,7 @@ security:
     authorities-claim-name: "authorities"
   cors:
     allowed-origins:
-      - "http://127.0.0.1:3000"
-      - "http://127.0.0.1:8080"
+      - "http://localhost:3000"
 springdoc:
   api-docs:
     enabled: true

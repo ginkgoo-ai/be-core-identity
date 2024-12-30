@@ -7,11 +7,11 @@
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.4.1</version>
     </parent>
-    <groupId>com.ginkgooai</groupId>
-    <artifactId>core-identity</artifactId>
+    <groupId>com.benwk</groupId>
+    <artifactId>ginkgoo-core-identity</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>core-identity</name>
-    <description>ginkgooai-core-identity</description>
+    <name>ginkgoo-core-identity</name>
+    <description>ginkgoo-core-identity</description>
     <url/>
     <licenses>
         <license/>
@@ -38,6 +38,16 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.springframework</groupId>-->
+<!--            <artifactId>spring-webflux</artifactId>-->
+<!--            <exclusions>-->
+<!--                <exclusion>-->
+<!--                    <groupId>org.springframework.boot</groupId>-->
+<!--                    <artifactId>spring-boot-starter-reactor-netty</artifactId>-->
+<!--                </exclusion>-->
+<!--            </exclusions>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -180,8 +190,7 @@
     </dependencies>
 
 	<build>
-        <finalName>server</finalName>
-        <plugins>
+		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>

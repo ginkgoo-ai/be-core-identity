@@ -4,22 +4,21 @@
 
 ### Completed ✅
 
+*
 * OAuth 2.0 Implementation
-  * Support SPA with PKCE
-  * OAuth Consent
-  * JWT with Management
-  * OIDC
-  * OAuth Client Reistration Endpoint
-  * Client Registration Endpoint
-* Form Login
+  * Support SPA with PKCE 
+  * Form Login
+  * Google Social Login Integration & Capture user in DB
+* OIDC Implementation
+* OAuth2.0-client Registration Endpoint (social login)
+* OAuth2.0-server Registration Client Endpoint
 * Self-Registration
-* Password Recovery
-* Multi-Factor Authentication (Email)
 
 ### In Progress 🚧
-
 * Additional Social Login Integration
+* Password Recovery
 * Multi-Factor Authentication (SMS)
+* Multi-Factor Authentication (Email)
 
 ## Tech Stack
 
@@ -82,5 +81,7 @@ MIT License
 ---
 
 © 2024 Ginkgoo Core Identity Service
+
+```
 
 ```

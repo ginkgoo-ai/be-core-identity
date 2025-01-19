@@ -23,7 +23,9 @@ import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationConsentService;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService;
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
@@ -47,6 +49,14 @@ public class AuthorizationServerConfig {
 
     private final UserService userService;
 
+
+    @Bean
+    public AuthorizationServerSettings authorizationServerSettings() {
+        return AuthorizationServerSettings.builder()
+                .issuer("http://localhost:9000")
+                .build();
+    }
+
     @Bean
     public OAuth2TokenCustomizer<JwtEncodingContext> idTokenCustomizer() {
         return new FederatedIdentityIdTokenCustomizer();
@@ -55,6 +65,14 @@ public class AuthorizationServerConfig {
     @Bean
     public RegisteredClientRepository registeredClientRepository(JdbcTemplate jdbcTemplate) {
         return new JdbcRegisteredClientRepository(jdbcTemplate);
+    }
+
+    @Bean
+    public OAuth2AuthorizationConsentService authorizationConsentService(JdbcTemplate jdbcTemplate, RegisteredClientRepository registeredClientRepository) {
+        return new JdbcOAuth2AuthorizationConsentService(
+                jdbcTemplate,
+                registeredClientRepository
+        );
     }
 
     @Bean
@@ -68,6 +86,9 @@ public class AuthorizationServerConfig {
                 .securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
                 .with(authorizationServerConfigurer, (authorizationServer) ->
                         authorizationServer
+                                .authorizationEndpoint(endpoint ->
+                                        endpoint.consentPage("/oauth2/consent")
+                                )
                                 .oidc(oidc -> oidc
                                         .userInfoEndpoint(userInfo -> userInfo
                                                 .userInfoMapper(userInfoMapperWithCustomClaims())
@@ -159,11 +180,5 @@ public class AuthorizationServerConfig {
         return new OidcUserInfo(claims);
     }
 
-    @Bean
-    public AuthorizationServerSettings authorizationServerSettings() {
-        return AuthorizationServerSettings.builder()
-                .issuer("http://localhost:9000")
-                .build();
-    }
 
 }

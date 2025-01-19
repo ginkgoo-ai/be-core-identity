@@ -51,6 +51,12 @@ public class OAuth2RegisteredClient implements Serializable {
     private String clientId;
 
     /**
+     * Client secret raw used for client authentication
+     */
+    @Column(name = "client_secret_raw")
+    private String clientSecretRaw;
+
+    /**
      * Client secret used for client authentication
      */
     @Column(name = "client_secret")

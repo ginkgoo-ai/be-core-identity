@@ -157,6 +157,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         //View endpoint
                         .requestMatchers("/oauth2/authorize",
+                                "oauth2/consent",
                                 "/api/oauth2/clients",
                                 "/oauth2/token",
                                 "/login",
@@ -196,8 +197,7 @@ public class SecurityConfig {
                         .usernameParameter("email")
                         .passwordParameter("password")
                 )
-
-                .addFilterBefore(mfaAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(mfaAuthenticationFilter,  UsernamePasswordAuthenticationFilter.class)
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessHandler(oidcLogoutSuccessHandler())

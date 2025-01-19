@@ -4,20 +4,25 @@ import com.benwk.ginkgoocoreidentity.domain.TokenIdentity;
 import com.benwk.ginkgoocoreidentity.exception.InvalidVerificationCodeException;
 import com.benwk.ginkgoocoreidentity.exception.ResourceNotFoundException;
 import com.benwk.ginkgoocoreidentity.service.UserService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsent;
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.io.IOException;
+import java.security.Principal;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 @Controller
 @AllArgsConstructor
@@ -27,6 +32,17 @@ public class ViewController {
     private final UserService userService;
 
     private final RegisteredClientRepository clientRepository;
+
+    private final OAuth2AuthorizationConsentService authorizationConsentService;
+
+    private static final Map<String, String> SCOPE_DESCRIPTIONS = Map.of(
+            "openid", "Access your basic profile information",
+            "profile", "Access your profile details",
+            "email", "Access your email address",
+            "address", "Access your address information",
+            "phone", "Access your phone number",
+            "offline_access", "Access to refresh token for offline access"
+    );
 
     @GetMapping("/")
     public String homePage(@RequestParam(required = false) String continueUrl, Model model) {
@@ -100,4 +116,78 @@ public class ViewController {
             return "verify-email-result";
         }
     }
+
+    @GetMapping("/oauth2/consent")
+    public String consent(Principal principal,
+                          Model model,
+                          @RequestParam(OAuth2ParameterNames.CLIENT_ID) String clientId,
+                          @RequestParam(OAuth2ParameterNames.SCOPE) String scope,
+                          @RequestParam(OAuth2ParameterNames.STATE) String state) {
+
+        RegisteredClient client = clientRepository.findByClientId(clientId);
+        OAuth2AuthorizationConsent consent = authorizationConsentService.findById(
+                client.getId(),
+                principal.getName()
+        );
+
+        Set<String> requestedScopes = new HashSet<>();
+        Set<String> previouslyApprovedScopes = new HashSet<>();
+        Set<String> scopesToApprove = new HashSet<>();
+
+        requestedScopes.addAll(Arrays.asList(scope.split(" ")));
+
+        if (consent != null) {
+            previouslyApprovedScopes = consent.getScopes();
+        }
+
+        for (String requestedScope : requestedScopes) {
+            if (!previouslyApprovedScopes.contains(requestedScope)) {
+                scopesToApprove.add(requestedScope);
+            }
+        }
+
+        model.addAttribute("clientId", clientId);
+        model.addAttribute("state", state);
+        model.addAttribute("scopes", scopesToApprove);
+        model.addAttribute("previouslyApprovedScopes", previouslyApprovedScopes);
+        model.addAttribute("clientName", client.getClientName());
+        model.addAttribute("scopeDescriptions", SCOPE_DESCRIPTIONS);
+
+        return "consent";
+    }
+
+    @PostMapping("/oauth2/consent")
+    public String consent(Principal principal,
+                          Model model,
+                          @RequestParam(OAuth2ParameterNames.CLIENT_ID) String clientId,
+                          @RequestParam(OAuth2ParameterNames.SCOPE) String scope,
+                          @RequestParam(OAuth2ParameterNames.STATE) String state,
+                          @RequestParam(value = "approve", required = false) Boolean approve) {
+
+        RegisteredClient client = clientRepository.findByClientId(clientId);
+
+        OAuth2AuthorizationConsent.Builder builder = OAuth2AuthorizationConsent
+                .withId(client.getId(), principal.getName());
+
+        if (Boolean.TRUE.equals(approve)) {
+            for (String requestedScope : scope.split(" ")) {
+                builder.scope(requestedScope);
+            }
+        }
+
+        OAuth2AuthorizationConsent consent = builder.build();
+        this.authorizationConsentService.save(consent);
+
+        String redirectUri = UriComponentsBuilder
+                .fromPath("/oauth2/authorize")
+                .queryParam(OAuth2ParameterNames.CLIENT_ID, clientId)
+                .queryParam(OAuth2ParameterNames.STATE, state)
+                .queryParam(OAuth2ParameterNames.SCOPE, scope)
+                .queryParam("consent_granted", approve)
+                .build()
+                .toUriString();
+
+        return "redirect:" + redirectUri;
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.ginkgooai.core.identity.service;
 
+import com.benwk.ginkgoocoreidentity.domain.*;
 import com.ginkgooai.core.identity.domain.Role;
 import com.ginkgooai.core.identity.domain.TokenIdentity;
 import com.ginkgooai.core.identity.domain.UserInfo;
@@ -7,6 +8,7 @@ import com.ginkgooai.core.identity.domain.UserStatus;
 import com.ginkgooai.core.identity.dto.request.RegistrationRequest;
 import com.ginkgooai.core.identity.dto.response.UserResponse;
 import com.ginkgooai.core.identity.enums.VerificationStrategy;
+import com.benwk.ginkgoocoreidentity.exception.*;
 import com.ginkgooai.core.identity.exception.*;
 import com.ginkgooai.core.identity.repository.RoleRepository;
 import com.ginkgooai.core.identity.repository.UserRepository;
@@ -113,8 +115,7 @@ public class UserService {
     }
 
 
-    @Transactional
-    public UserResponse loadUser(String email) {
+    public UserResponse getUser(String email) {
         log.debug("Retrieving user by email: {}", email);
         return UserResponse.from(userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", email)));

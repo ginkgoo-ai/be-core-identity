@@ -27,7 +27,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/admin/oauth2/registrations")
+@RequestMapping("/api/v1/oauth2/registrations")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "OAuth2 Client Registration Management",

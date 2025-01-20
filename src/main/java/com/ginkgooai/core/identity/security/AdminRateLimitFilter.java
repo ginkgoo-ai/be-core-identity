@@ -50,6 +50,6 @@ public class AdminRateLimitFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
 
-        return !path.startsWith("/admin/oauth2/");
+        return !path.startsWith("/api/v1/oauth2/");
     }
 }

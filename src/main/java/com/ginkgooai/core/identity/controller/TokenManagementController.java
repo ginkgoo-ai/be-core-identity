@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/admin/oauth2/tokens")
+@RequestMapping("/api/admin/tokens")
 @PreAuthorize("hasRole('ADMIN')")  // Requires ADMIN role for all endpoints
 @Slf4j
 public class TokenManagementController {

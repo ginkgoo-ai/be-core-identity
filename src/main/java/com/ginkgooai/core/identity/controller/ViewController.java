@@ -14,7 +14,7 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -27,7 +27,6 @@ import java.util.Set;
 @Controller
 @AllArgsConstructor
 @Slf4j
-@RequestMapping("")
 public class ViewController {
 
     private final UserService userService;
@@ -92,8 +91,8 @@ public class ViewController {
 
             // Set success attributes
             model.addAttribute("verified", true);
-            model.addAttribute("autoRedirect", true);
-            model.addAttribute("redirectDelay", 3000);
+            model.addAttribute("autoRedirect", true);  // 用于控制自动跳转
+            model.addAttribute("redirectDelay", 3000); // 3秒后自动跳转
 
             return "verify-email-result";
 
@@ -156,4 +155,39 @@ public class ViewController {
 
         return "consent";
     }
+
+    @PostMapping("/oauth2/consent")
+    public String consent(Principal principal,
+                          Model model,
+                          @RequestParam(OAuth2ParameterNames.CLIENT_ID) String clientId,
+                          @RequestParam(OAuth2ParameterNames.SCOPE) String scope,
+                          @RequestParam(OAuth2ParameterNames.STATE) String state,
+                          @RequestParam(value = "approve", required = false) Boolean approve) {
+
+        RegisteredClient client = clientRepository.findByClientId(clientId);
+
+        OAuth2AuthorizationConsent.Builder builder = OAuth2AuthorizationConsent
+                .withId(client.getId(), principal.getName());
+
+        if (Boolean.TRUE.equals(approve)) {
+            for (String requestedScope : scope.split(" ")) {
+                builder.scope(requestedScope);
+            }
+        }
+
+        OAuth2AuthorizationConsent consent = builder.build();
+        this.authorizationConsentService.save(consent);
+
+        String redirectUri = UriComponentsBuilder
+                .fromPath("/oauth2/authorize")
+                .queryParam(OAuth2ParameterNames.CLIENT_ID, clientId)
+                .queryParam(OAuth2ParameterNames.STATE, state)
+                .queryParam(OAuth2ParameterNames.SCOPE, scope)
+                .queryParam("consent_granted", approve)
+                .build()
+                .toUriString();
+
+        return "redirect:" + redirectUri;
+    }
+
 }

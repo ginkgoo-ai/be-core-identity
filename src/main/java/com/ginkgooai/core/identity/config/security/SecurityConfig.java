@@ -78,7 +78,6 @@ public class SecurityConfig {
 
         return handler;
     }
-    
 
     @Bean
     public AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository() {
@@ -107,7 +106,7 @@ public class SecurityConfig {
     @Order(2)
     public SecurityFilterChain adminApiSecurityFilterChain(HttpSecurity http) throws Exception {
         return configureResourceServer(http)
-                .securityMatcher("/admin/oauth2/**")
+                .securityMatcher("/api/v1/oauth2/**")
                 .cors(cors -> Customizer.withDefaults())
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
@@ -174,10 +173,10 @@ public class SecurityConfig {
                                 "/webjars/**"
                         ).permitAll()
                         //API endpoints
-                        .requestMatchers(HttpMethod.POST, "/users").permitAll()
-                        .requestMatchers(HttpMethod.PATCH, "/users/*/email/verification").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/users/password-resets").permitAll()
-                        .requestMatchers(HttpMethod.PATCH, "/users/password-resets/*").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/userinfos").permitAll()
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/userinfos/*/email/verification").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/userinfos/password-resets").permitAll()
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/userinfos/password-resets/*").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2

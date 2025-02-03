@@ -3,8 +3,10 @@ package com.ginkgooai.core.identity.config.security;
 import com.ginkgooai.core.identity.dto.UserInfoAuthentication;
 import com.ginkgooai.core.identity.dto.response.UserResponse;
 import com.ginkgooai.core.identity.security.FederatedIdentityIdTokenCustomizer;
+import com.ginkgooai.core.identity.service.JwtKeyService;
 import com.ginkgooai.core.identity.service.UserService;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -36,6 +38,7 @@ import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
 @Configuration
@@ -45,11 +48,10 @@ public class AuthorizationServerConfig {
 
     private final UserService userService;
 
-
     @Bean
     public AuthorizationServerSettings authorizationServerSettings() {
         return AuthorizationServerSettings.builder()
-                .issuer("http://localhost:9000")
+                .issuer("http://127.0.0.1:9000")
                 .build();
     }
 
@@ -77,7 +79,7 @@ public class AuthorizationServerConfig {
             throws Exception {
         OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
                 OAuth2AuthorizationServerConfigurer.authorizationServer();
-        http.securityMatcher("/oauth2/**", "/login/oauth2/**")
+        http.securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
                 .cors(Customizer.withDefaults())
                 .securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
                 .with(authorizationServerConfigurer, (authorizationServer) ->
@@ -99,6 +101,7 @@ public class AuthorizationServerConfig {
                 // Redirect to the OAuth 2.0 Login endpoint when not authenticated
                 .exceptionHandling((exceptions) -> exceptions
                         .defaultAuthenticationEntryPointFor(
+//                                new LoginUrlAuthenticationEntryPoint("http://127.0.0.1:4000/login"),
                                 new LoginUrlAuthenticationEntryPoint("/login"),
                                 new MediaTypeRequestMatcher(MediaType.TEXT_HTML)
                         )
@@ -119,7 +122,7 @@ public class AuthorizationServerConfig {
                 );
             }
 
-            UserResponse userResponse = userService.getUser(email);
+            UserResponse userResponse = userService.loadUser(email);
             if (userResponse == null) {
                 throw new OAuth2AuthenticationException(
                         new OAuth2Error("invalid_user", "User not found with email: " + email, null)
@@ -162,7 +165,8 @@ public class AuthorizationServerConfig {
 
     private OidcUserInfo buildOidcUserInfo(UserResponse userResponse) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("sub", userResponse.getId().toString());
+        claims.put("id", userResponse.getId());
+        claims.put("sub", Optional.ofNullable(userResponse.getSub()).orElse(userResponse.getId()));
         claims.put("email", userResponse.getEmail());
         claims.put("email_verified", true);
         claims.put("first_name", userResponse.getFirstName());

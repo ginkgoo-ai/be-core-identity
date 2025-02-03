@@ -1,6 +1,5 @@
 package com.ginkgooai.core.identity.controller;
 
-import com.benwk.ginkgoocoreidentity.dto.request.*;
 import com.ginkgooai.core.identity.dto.request.*;
 import com.ginkgooai.core.identity.dto.response.UserResponse;
 import com.ginkgooai.core.identity.exception.InvalidVerificationCodeException;
@@ -28,7 +27,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @Validated
 @RestController
-@RequestMapping("/api/v1/userinfos")
+@RequestMapping("/users")
 @RequiredArgsConstructor
 @Tag(name = "User Management", description = "APIs for user self-registration and account management")
 public class UserInfoController {

@@ -33,7 +33,7 @@ import java.util.UUID;
 @Slf4j
 @Validated
 @RestController
-@RequestMapping("/api/v1/oauth2/clients")
+@RequestMapping("/admin/oauth2/clients")
 @RequiredArgsConstructor
 @Tag(name = "OAuth2 Client Management", description = "APIs for managing OAuth2 client applications")
 @SecurityRequirement(name = "bearerAuth")

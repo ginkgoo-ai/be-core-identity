@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authorization Request - Ginkgoo Identity</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="min-h-screen bg-gray-50">
+<div class="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <h2 class="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
+            Authorization Request
+        </h2>
+    </div>
+
+    <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
+        <div class="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
+            <div class="mb-6">
+                <p class="text-gray-700">
+                    <span th:text="${clientId}">Application</span> would like permission to:
+                </p>
+            </div>
+
+            <form th:action="@{/oauth2/authorize}" method="post" class="space-y-6">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                <div class="space-y-4">
+                    <div th:each="scope : ${scopes}" class="flex items-start">
+                        <div class="flex h-6 items-center">
+                            <input th:id="${scope}" name="scope" type="checkbox" th:value="${scope}"
+                                   class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                                   checked>
+                        </div>
+                        <div class="ml-3">
+                            <label th:for="${scope}" class="text-sm font-medium leading-6 text-gray-900">
+                                <span th:text="${scope}"></span>
+                            </label>
+                            <p class="text-sm text-gray-500" th:text="${scopeDescriptions[scope]}">
+                                Scope description
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-4">
+                    <button type="submit" name="user_oauth_approval" value="false"
+                            class="rounded-md bg-gray-200 px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-300">
+                        Cancel
+                    </button>
+                    <button type="submit" name="user_oauth_approval" value="true"
+                            class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">
+                        Authorize
+                    </button>
+                </div>
+
+                <!-- Hidden fields required by OAuth2 -->
+                <input type="hidden" name="client_id" th:value="${clientId}">
+                <input type="hidden" name="state" th:value="${state}">
+            </form>
+
+            <div class="mt-8 pt-8 border-t border-gray-200">
+                <div class="flex items-center">
+                    <img th:if="${clientLogoUrl}" th:src="${clientLogoUrl}" alt="Client Logo"
+                         class="h-8 w-8 rounded-full">
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-900" th:text="${clientName}">
+                            Application Name
+                        </p>
+                        <p class="text-sm text-gray-500" th:if="${clientUrl}">
+                            <a th:href="${clientUrl}" target="_blank" class="hover:underline">
+                                View application details
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p class="mt-10 text-center text-sm text-gray-500">
+            This application will be able to access your data even when you're not using it.
+            You can revoke access at any time from your
+            <a href="/settings/applications" class="font-semibold text-indigo-600 hover:text-indigo-500">
+                account settings
+            </a>.
+        </p>
+    </div>
+</div>
+</body>
+</html>

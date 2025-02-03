@@ -23,7 +23,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/users/{userId}/mfa")
+@RequestMapping("/users/{userId}/mfa")
 @Tag(name = "MFA Management", description = "APIs for managing Multi-Factor Authentication")
 @RequiredArgsConstructor
 @Validated

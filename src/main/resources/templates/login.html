@@ -443,7 +443,7 @@
         password: password,
       };
 
-      const response = await fetch('/api/v1/userinfos', {
+      const response = await fetch('/users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -484,7 +484,7 @@
       }
       const csrfToken = encodeURIComponent(csrfCookie.split('=')[1]);
       
-      const response = await fetch(`/api/v1/userinfos/${userId}/email/verification`, {
+      const response = await fetch(`/users/${userId}/email/verification`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

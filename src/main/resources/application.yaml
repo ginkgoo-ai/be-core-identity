@@ -1,7 +1,9 @@
-authorization-server-uri: ${scheme}://${core_identity_host}:${core_identity_port}
+core-identity-uri: ${SCHEME}://${CORE_IDENTITY_HOST}:${CORE_IDENTITY_PORT}
+core-gateway-uri: ${SCHEME}://${CORE_GATEWAY_HOST}:${CORE_GATEWAY_PORT}
+slate-uri: ${SCHEME}://${SLATE_HOST}:${SLATE_PORT}
 
 server:
-  port: 9000
+  port: ${CORE_IDENTITY_PORT}
   shutdown: graceful
 
 spring:
@@ -9,9 +11,9 @@ spring:
     timeout-per-shutdown-phase: 30s
     
   datasource:
-    url: jdbc:postgresql://${postgres_host}:${postgres_port}/${postgres_db}
-    username: ${postgres_user}
-    password: ${postgres_password}
+    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
     driver-class-name: org.postgresql.Driver
   
   jpa:
@@ -22,14 +24,15 @@ spring:
   
   data:
     redis:
-      host: ${redis_host}
-      port: ${redis_port}
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password : ${REDIS_PASSWORD}
 
   mail:
-    host: ${mail_host}
-    port: ${mail_port}
-    username: ${mail_username}
-    password: ${mail_password}
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     properties:
       mail:
         smtp:
@@ -37,7 +40,7 @@ spring:
           starttls:
             enable: true
     from: ${MAIL_FROM}
-    app-url: ${APP_URL}
+    app-url: ${core-identity-uri}
 
 
 
@@ -62,8 +65,8 @@ app:
     url-token:
       expiration: 900  # 15 minutes in seconds
       cooldown: 60     # 1 minute in seconds
-    server-url: ${authorization-server-uri:http://localhost:9000}
-    redirect-url: ${authorization-server-uri:http://localhost:9000}
+    server-url: ${core-gateway-uri}
+    redirect-url: ${slate-uri}
 
 
 logging:
@@ -75,15 +78,15 @@ security:
     ip-whitelist:
       - "10.0.0.0/8"
       - "192.168.0.0/16"
-    api-key: "${ADMIN_API_KEY:dBj8kX7vYp4mN9qR2tW5hL1cF3nM6sQ9wZ0xV8yU4jK7gH2bP5}"
+    api-key: "${ADMIN_API_KEY}"
     rate-limit: 10
   jwt:
     authority-prefix: "ROLE_"
     authorities-claim-name: "authorities"
   cors:
     allowed-origins:
-      - "http://127.0.0.1:3000"
-      - "http://127.0.0.1:8080"
+      - ${core-identity-uri}
+      - ${slate-uri}
 springdoc:
   api-docs:
     enabled: true

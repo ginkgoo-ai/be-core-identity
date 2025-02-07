@@ -1,6 +1,6 @@
-core-identity-uri: ${SCHEME}://${CORE_IDENTITY_HOST}:${CORE_IDENTITY_PORT}
-core-gateway-uri: ${SCHEME}://${CORE_GATEWAY_HOST}:${CORE_GATEWAY_PORT}
-slate-uri: ${SCHEME}://${SLATE_HOST}:${SLATE_PORT}
+core-identity-uri: ${SERVICE_SCHEME}://${CORE_IDENTITY_HOST}:${CORE_IDENTITY_PORT}
+core-gateway-uri: ${SERVICE_SCHEME}://${CORE_GATEWAY_HOST}:${CORE_GATEWAY_PORT}
+slate-uri: ${APP_SCHEME}://${SLATE_HOST}:${SLATE_PORT}
 
 server:
   port: ${CORE_IDENTITY_PORT}

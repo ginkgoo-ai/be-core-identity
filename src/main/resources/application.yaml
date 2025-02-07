@@ -71,8 +71,8 @@ app:
 
 logging:
   level:
-    com.benwk.ginkgoocoreidentity: trace 
-    org.springframework: trace 
+    root: debug
+    com.ginkgooai: debug
 security:
   admin:
     ip-whitelist:

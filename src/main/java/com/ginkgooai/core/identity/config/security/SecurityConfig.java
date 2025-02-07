@@ -173,6 +173,10 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/webjars/**"
                         ).permitAll()
+                        //health endpoints
+                        .requestMatchers(
+                                "/health"
+                        ).permitAll()
                         //API endpoints
                         .requestMatchers(HttpMethod.POST, "/users").permitAll()
                         .requestMatchers(HttpMethod.PATCH, "/users/*/email/verification").permitAll()

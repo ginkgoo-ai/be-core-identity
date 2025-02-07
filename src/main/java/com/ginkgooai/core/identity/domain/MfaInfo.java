@@ -20,7 +20,6 @@ import java.util.Objects;
         name = "mfa_info",
         indexes = {
                 @Index(name = "idx_user_id", columnList = "user_id", unique = true),
-                @Index(name = "idx_status", columnList = "status"),
                 @Index(name = "idx_createdat", columnList = "created_at")
         }
 )

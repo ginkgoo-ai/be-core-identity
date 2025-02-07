@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
         name = "user_info",
         indexes = {
                 @Index(name = "idx_email", columnList = "email", unique = true),
-                @Index(name = "idx_status", columnList = "status"),
                 @Index(name = "idx_createdat", columnList = "created_at")
         }
 )

@@ -7,6 +7,7 @@ import com.ginkgooai.core.identity.service.JwtKeyService;
 import com.ginkgooai.core.identity.service.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -43,15 +44,18 @@ import java.util.function.Function;
 
 @Configuration
 @EnableWebSecurity
-@AllArgsConstructor
 public class AuthorizationServerConfig {
 
-    private final UserService userService;
+    @Autowired
+    private UserService userService;
+   
+    @Value("${core-identity-uri}")
+    private String identityUrl; 
 
     @Bean
     public AuthorizationServerSettings authorizationServerSettings() {
         return AuthorizationServerSettings.builder()
-                .issuer("http://127.0.0.1:9000")
+                .issuer(identityUrl)
                 .build();
     }
 

@@ -69,10 +69,6 @@ app:
     redirect-url: ${slate-uri}
 
 
-logging:
-  level:
-    root: debug
-    com.ginkgooai: debug
 security:
   admin:
     ip-whitelist:
@@ -91,3 +87,8 @@ springdoc:
   api-docs:
     enabled: true
     path: /v3/api-docs
+    
+logging:
+  level:
+    root: ${LOG_LEVEL_ROOT:INFO}
+    com.ginkgooai: ${LOG_LEVEL_GINKGOOAI:DEBUG}

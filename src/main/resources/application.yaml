@@ -19,8 +19,13 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
+  
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
   
   data:
     redis:
@@ -91,4 +96,5 @@ springdoc:
 logging:
   level:
     root: ${LOG_LEVEL_ROOT:INFO}
+    org.springframework.security: ${LOG_LEVEL_SPRING_SECURITY:DEBUG}
     com.ginkgooai: ${LOG_LEVEL_GINKGOOAI:DEBUG}

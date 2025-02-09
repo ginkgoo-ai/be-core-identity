@@ -11,14 +11,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity
-@Table(
-        name = "user_social_connection",
-        indexes = {
-                @Index(name = "idx_provider", columnList = "provider_id,provider_user_id", unique = true),
-                @Index(name = "idx_user", columnList = "user_id"),
-                @Index(name = "idx_createdat", columnList = "created_at")
-        }
-)
+@Table(name = "user_social_connection")
 public class UserSocialConnection {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

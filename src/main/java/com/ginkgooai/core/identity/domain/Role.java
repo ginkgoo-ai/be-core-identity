@@ -5,12 +5,7 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(
-        name = "role",
-        indexes = {
-                @Index(name = "idx_name", columnList = "name", unique = true)
-        }
-)
+@Table(name = "role")
 public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

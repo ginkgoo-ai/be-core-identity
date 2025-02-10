@@ -21,13 +21,7 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @Entity
-@Table(
-        name = "user_info",
-        indexes = {
-                @Index(name = "idx_email", columnList = "email", unique = true),
-                @Index(name = "idx_createdat", columnList = "created_at")
-        }
-)
+@Table(name = "user_info")
 @EntityListeners(AuditingEntityListener.class)
 public class UserInfo implements UserDetails {
 

@@ -16,14 +16,7 @@ import java.util.Objects;
 @Getter
 @Setter
 @Entity
-@Table(
-        name = "mfa_info",
-        indexes = {
-                @Index(name = "idx_user_id", columnList = "user_id", unique = true),
-                @Index(name = "idx_createdat", columnList = "created_at")
-        }
-)
-@EntityListeners(AuditingEntityListener.class)
+@Table(name = "mfa_info")
 public class MfaInfo {
 
     @Id

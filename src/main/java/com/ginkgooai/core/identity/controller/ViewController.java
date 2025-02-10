@@ -4,8 +4,9 @@ import com.ginkgooai.core.identity.domain.TokenIdentity;
 import com.ginkgooai.core.identity.exception.InvalidVerificationCodeException;
 import com.ginkgooai.core.identity.exception.ResourceNotFoundException;
 import com.ginkgooai.core.identity.service.UserService;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsent;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService;
@@ -25,16 +26,21 @@ import java.util.Map;
 import java.util.Set;
 
 @Controller
-@AllArgsConstructor
 @Slf4j
 @RequestMapping("")
 public class ViewController {
 
-    private final UserService userService;
+    @Value("${core-gateway-uri}")
+    private String coreGatewayUri;
 
-    private final RegisteredClientRepository clientRepository;
+    @Autowired
+    private UserService userService;
 
-    private final OAuth2AuthorizationConsentService authorizationConsentService;
+    @Autowired
+    private RegisteredClientRepository clientRepository;
+
+    @Autowired
+    private OAuth2AuthorizationConsentService authorizationConsentService;
 
     private static final Map<String, String> SCOPE_DESCRIPTIONS = Map.of(
             "openid", "Access your basic profile information",
@@ -46,8 +52,8 @@ public class ViewController {
     );
 
     @GetMapping("/")
-    public String homePage(@RequestParam(required = false) String continueUrl, Model model) {
-        return "loading";
+    public String root() {
+        return "redirect:" + this.coreGatewayUri; //return default OAuth Client
     }
 
     @GetMapping("/login")

@@ -88,9 +88,9 @@ public class AuthorizationServerConfig {
                 .securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
                 .with(authorizationServerConfigurer, (authorizationServer) ->
                         authorizationServer
-                                .authorizationEndpoint(endpoint ->
-                                        endpoint.consentPage("/oauth2/consent")
-                                )
+//                                .authorizationEndpoint(endpoint ->
+//                                        endpoint.consentPage("/oauth2/consent")
+//                                )
                                 .oidc(oidc -> oidc
                                         .userInfoEndpoint(userInfo -> userInfo
                                                 .userInfoMapper(userInfoMapperWithCustomClaims())

@@ -158,7 +158,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         //View endpoint
                         .requestMatchers("/oauth2/authorize",
-                                "oauth2/consent",
+//                                "oauth2/consent",
                                 "/api/oauth2/clients",
                                 "/oauth2/token",
                                 "/login",

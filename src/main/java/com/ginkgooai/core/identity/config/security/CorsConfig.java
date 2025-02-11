@@ -27,7 +27,6 @@ public class CorsConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-
         List<String> origins = new ArrayList<>(allowedOrigins);
         origins.add("null");
         config.setAllowedOrigins(origins);

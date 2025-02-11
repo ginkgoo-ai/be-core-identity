@@ -18,7 +18,8 @@
 
     <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
         <div class="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
-            <form id="loginForm" class="space-y-6" action="/login" method="POST">
+<!--            <form id="loginForm" class="space-y-6" action="/login" method="POST">-->
+            <form class="space-y-6" action="/login" method="POST" novalidate>
                 <div>
                     <label for="email" class="block text-sm font-medium leading-6 text-gray-900">Email address</label>
                     <div class="mt-2">
@@ -249,65 +250,6 @@
         hasSpecialChar;
   }
 
-  document.getElementById('loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    console.log("login begin:");
-    try {
-      const csrfCookie = document.cookie
-          .split('; ')
-          .find(cookie => cookie.startsWith('XSRF-TOKEN='));
-
-      if (!csrfCookie) {
-        throw new Error('CSRF token not found');
-      }
-      const csrfToken = encodeURIComponent(csrfCookie.split('=')[1]);
-
-      // First step: try login
-      const formData = new URLSearchParams();
-      formData.append('email', document.getElementById('email').value);
-      formData.append('password', document.getElementById('password').value);
-      formData.append('_csrf', csrfToken);
-
-      const response = await fetch('/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-          'X-XSRF-TOKEN': csrfToken,
-          'Upgrade-Insecure-Requests': '1'
-        },
-        body: formData.toString(),
-        credentials: 'same-origin',
-        redirect: 'follow'
-      });
-
-      const contentType = response.headers.get('content-type');
-      if (response.redirected) {
-        // 处理重定向
-        window.location.href = response.url;
-        return;
-      }
-
-      if (contentType && contentType.includes('application/json')) {
-        const data = await response.json();
-        if (data.requireMfa) {
-          document.getElementById('loginForm').classList.add('hidden');
-          document.getElementById('mfaForm').classList.remove('hidden');
-        } else {
-          showError(data.message || 'Login failed');
-        }
-      } else if (response.ok) {
-        // 如果响应成功但不是 JSON，可能是普通页面跳转
-        window.location.reload();
-      } else {
-        console.error('Error during login:', error);
-      }
-    } catch (error) {
-      console.error('Error during login:', error);
-    }
-  });
-
   document.getElementById('mfaForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -332,11 +274,11 @@
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-          'X-XSRF-TOKEN': csrfToken,
+          // 'X-XSRF-TOKEN': csrfToken,
           'Upgrade-Insecure-Requests': '1'
         },
         body: formData.toString(),
-        credentials: 'same-origin',
+        credentials: 'include',
         redirect: 'follow'
       });
 

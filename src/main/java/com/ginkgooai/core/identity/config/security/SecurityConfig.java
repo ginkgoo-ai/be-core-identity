@@ -13,6 +13,7 @@ import com.ginkgooai.core.identity.security.AdminApiKeyFilter;
 import com.ginkgooai.core.identity.security.AdminIpFilter;
 import com.ginkgooai.core.identity.security.AdminRateLimitFilter;
 import com.ginkgooai.core.identity.service.CustomOAuth2UserService;
+import com.ginkgooai.core.identity.service.CustomOidcUserService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -30,10 +31,13 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.client.web.*;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
@@ -83,6 +87,11 @@ public class SecurityConfig {
     @Bean
     public AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository() {
         return new HttpSessionOAuth2AuthorizationRequestRepository();
+    }
+
+    @Bean
+    public OAuth2UserService<OidcUserRequest, OidcUser> oidcUserService() {
+        return new CustomOidcUserService(customOAuth2UserService);
     }
 
     private HttpSecurity configureResourceServer(HttpSecurity http) throws Exception {
@@ -154,6 +163,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
+                        .ignoringRequestMatchers("/login", "/oauth2/authorize")
                 )
                 .authorizeHttpRequests(authorize -> authorize
                         //View endpoint
@@ -189,6 +199,7 @@ public class SecurityConfig {
                         .clientRegistrationRepository(clientRegistrationRepository)
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(customOAuth2UserService)
+                                .oidcUserService(oidcUserService())
                         )
                         .successHandler(authenticationSuccessHandler())
                 )
@@ -201,6 +212,7 @@ public class SecurityConfig {
                         .loginPage("/login")
                         .usernameParameter("email")
                         .passwordParameter("password")
+                        .permitAll()
                 )
                 .addFilterBefore(mfaAuthenticationFilter,  UsernamePasswordAuthenticationFilter.class)
                 .logout(logout -> logout

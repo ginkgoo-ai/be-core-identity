@@ -3,9 +3,7 @@ package com.ginkgooai.core.identity.config.security;
 import com.ginkgooai.core.identity.dto.UserInfoAuthentication;
 import com.ginkgooai.core.identity.dto.response.UserResponse;
 import com.ginkgooai.core.identity.security.FederatedIdentityIdTokenCustomizer;
-import com.ginkgooai.core.identity.service.JwtKeyService;
 import com.ginkgooai.core.identity.service.UserService;
-import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -39,7 +37,6 @@ import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 
 @Configuration
@@ -133,7 +130,8 @@ public class AuthorizationServerConfig {
                 );
             }
 
-            return buildOidcUserInfo(userResponse);
+            String sub = authorization.getAccessToken().getClaims().get("sub").toString();
+            return buildOidcUserInfo(userResponse, sub);
         };
     }
 
@@ -167,10 +165,10 @@ public class AuthorizationServerConfig {
         return null;
     }
 
-    private OidcUserInfo buildOidcUserInfo(UserResponse userResponse) {
+    private OidcUserInfo buildOidcUserInfo(UserResponse userResponse, String sub) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("id", userResponse.getId());
-        claims.put("sub", Optional.ofNullable(userResponse.getSub()).orElse(userResponse.getId()));
+        claims.put("sub", sub);
         claims.put("email", userResponse.getEmail());
         claims.put("email_verified", true);
         claims.put("first_name", userResponse.getFirstName());

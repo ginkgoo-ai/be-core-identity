@@ -3,7 +3,7 @@ core-gateway-uri: ${SERVICE_SCHEME}://${CORE_GATEWAY_HOST}:${CORE_GATEWAY_PORT}
 slate-uri: ${APP_SCHEME}://${SLATE_HOST}:${SLATE_PORT}
 
 server:
-  port: ${CORE_IDENTITY_PORT}
+  port: 8080
   shutdown: graceful
 
 spring:

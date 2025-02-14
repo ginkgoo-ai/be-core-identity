@@ -59,6 +59,7 @@ management:
       enabled: false
 
 app:
+  dev-uris: ${DEV_SLATE_URI}
   jwt:
   auth-server-uri: ${AUTH_SERVER}
   verification:

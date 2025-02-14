@@ -95,5 +95,6 @@ springdoc:
 logging:
   level:
     root: ${LOG_LEVEL_ROOT:INFO}
+    org.springframework.web.cors: ${LOG_LEVEL_SPRING_WEB_CORS:DEBUG}
     org.springframework.security: ${LOG_LEVEL_SPRING_SECURITY:DEBUG}
     com.ginkgooai: ${LOG_LEVEL_GINKGOOAI:DEBUG}

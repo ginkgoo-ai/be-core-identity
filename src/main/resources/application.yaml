@@ -1,6 +1,5 @@
 core-identity-uri: ${SERVICE_SCHEME}://${CORE_IDENTITY_HOST}:${CORE_IDENTITY_PORT}
 core-gateway-uri: ${SERVICE_SCHEME}://${CORE_GATEWAY_HOST}:${CORE_GATEWAY_PORT}
-slate-uri: ${APP_SCHEME}://${SLATE_HOST}:${SLATE_PORT}
 
 server:
   port: 8080
@@ -61,6 +60,7 @@ management:
 
 app:
   jwt:
+  auth-server-uri: ${AUTH_SERVER}
   verification:
     strategy: CODE  # Default verification strategy (CODE or URL_TOKEN)
     code:
@@ -85,7 +85,8 @@ security:
   cors:
     allowed-origins:
       - ${core-gateway-uri}
-      - ${slate-uri}
+      - ${AUTH_CLIENT}
+      - ${SLATE_URI}
 springdoc:
   api-docs:
     enabled: true

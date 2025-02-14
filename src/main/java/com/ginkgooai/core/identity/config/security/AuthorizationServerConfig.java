@@ -46,13 +46,13 @@ public class AuthorizationServerConfig {
     @Autowired
     private UserService userService;
    
-    @Value("${core-identity-uri}")
-    private String identityUrl; 
+    @Value("${app.auth-server-uri}")
+    private String authServerUrl; 
 
     @Bean
     public AuthorizationServerSettings authorizationServerSettings() {
         return AuthorizationServerSettings.builder()
-                .issuer(identityUrl)
+                .issuer(authServerUrl)
                 .build();
     }
 

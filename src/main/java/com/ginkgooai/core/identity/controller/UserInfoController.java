@@ -1,5 +1,6 @@
 package com.ginkgooai.core.identity.controller;
 
+import com.ginkgooai.core.identity.domain.UserInfo;
 import com.ginkgooai.core.identity.dto.request.*;
 import com.ginkgooai.core.identity.dto.response.UserResponse;
 import com.ginkgooai.core.identity.exception.InvalidVerificationCodeException;
@@ -41,6 +42,14 @@ public class UserInfoController {
     private final OAuth2AuthorizationRequestResolver defaultAuthorizationRequestResolver;
     
     private final AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository;
+
+    @GetMapping("/{userId}")
+    @Operation(summary = "Get user info", description = "Retrieve information about the currently authenticated user")
+    public ResponseEntity<UserResponse> getUserInfo(@PathVariable String userId) {
+        log.debug("Retrieving info for user: {}", userId);
+        UserInfo userInfo = userService.getUserById(userId);
+        return ResponseEntity.ok(UserResponse.from(userInfo));
+    }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.CREATED)

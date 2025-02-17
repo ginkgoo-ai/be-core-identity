@@ -57,8 +57,8 @@ public class AuthorizationServerConfig {
     }
 
     @Bean
-    public OAuth2TokenCustomizer<JwtEncodingContext> idTokenCustomizer() {
-        return new FederatedIdentityIdTokenCustomizer();
+    public OAuth2TokenCustomizer<JwtEncodingContext> idTokenCustomizer(UserService userService) {
+        return new FederatedIdentityIdTokenCustomizer(userService);
     }
 
     @Bean

@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.Builder;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Data
 @Builder
@@ -16,7 +17,7 @@ public class UserResponse {
     private String firstName;
     private String lastName;
     private boolean enabled;
-    private Set<Role> roles;
+    private Set<String> roles;
 
     public static UserResponse from(UserInfo user) {
         return  UserResponse.builder()
@@ -25,7 +26,7 @@ public class UserResponse {
                 .email(user.getEmail())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
-                .roles(user.getRoles())
+                .roles(user.getRoles().stream().map(Role::getName).collect(Collectors.toSet()))
                 .build();
     }
 }

@@ -1,68 +1,68 @@
 package com.ginkgooai.core.identity.security;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
+import com.ginkgooai.core.identity.dto.response.UserResponse;
+import com.ginkgooai.core.identity.service.UserService;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Customizes ID Token and Access Token by replacing Google's sub with local user ID
+ * and adding necessary claims
+ */
 public final class FederatedIdentityIdTokenCustomizer implements OAuth2TokenCustomizer<JwtEncodingContext> {
 
-	private static final Set<String> ID_TOKEN_CLAIMS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
-			IdTokenClaimNames.ISS,
-			IdTokenClaimNames.SUB,
-			IdTokenClaimNames.AUD,
-			IdTokenClaimNames.EXP,
-			IdTokenClaimNames.IAT,
-			IdTokenClaimNames.AUTH_TIME,
-			IdTokenClaimNames.NONCE,
-			IdTokenClaimNames.ACR,
-			IdTokenClaimNames.AMR,
-			IdTokenClaimNames.AZP,
-			IdTokenClaimNames.AT_HASH,
-			IdTokenClaimNames.C_HASH
-	)));
+	private final UserService userService;
+
+	public FederatedIdentityIdTokenCustomizer(UserService userService) {
+		this.userService = userService;
+	}
 
 	@Override
 	public void customize(JwtEncodingContext context) {
-		if (OidcParameterNames.ID_TOKEN.equals(context.getTokenType().getValue())) {
-			Map<String, Object> thirdPartyClaims = extractClaims(context.getPrincipal());
+		// Only process ID Token and Access Token
+		if (OidcParameterNames.ID_TOKEN.equals(context.getTokenType().getValue()) ||
+				OAuth2TokenType.ACCESS_TOKEN.getValue().equals(context.getTokenType().getValue())) {
+
+			Map<String, Object> claims = extractClaims(context.getPrincipal());
+
+			// Get email from claims
+			String email = claims.get("email").toString();
+
+			// Load local user by email
+			UserResponse localUser = userService.loadUser(email);
+
 			context.getClaims().claims(existingClaims -> {
-				// Remove conflicting claims set by this authorization server
-				existingClaims.keySet().forEach(thirdPartyClaims::remove);
+				// Store original Google sub
+				String googleSub = existingClaims.get("sub").toString();
 
-				// Remove standard id_token claims that could cause problems with clients
-				ID_TOKEN_CLAIMS.forEach(thirdPartyClaims::remove);
-
-				// Add all other claims directly to id_token
-				existingClaims.putAll(thirdPartyClaims);
+				// Replace sub with local user ID and keep original as google_sub
+				existingClaims.put("google_sub", googleSub);
+				existingClaims.put("sub", localUser.getId());
+				existingClaims.put("email", email);
 			});
 		}
 	}
 
+	/**
+	 * Extracts claims from the authentication principal
+	 * @param principal The authentication principal
+	 * @return Map of claims
+	 */
 	private Map<String, Object> extractClaims(Authentication principal) {
-		Map<String, Object> claims;
 		if (principal.getPrincipal() instanceof OidcUser) {
-			OidcUser oidcUser = (OidcUser) principal.getPrincipal();
-			OidcIdToken idToken = oidcUser.getIdToken();
-			claims = idToken.getClaims();
+			return ((OidcUser) principal.getPrincipal()).getIdToken().getClaims();
 		} else if (principal.getPrincipal() instanceof OAuth2User) {
-			OAuth2User oauth2User = (OAuth2User) principal.getPrincipal();
-			claims = oauth2User.getAttributes();
-		} else {
-			claims = Collections.emptyMap();
+			return ((OAuth2User) principal.getPrincipal()).getAttributes();
 		}
-
-		return new HashMap<>(claims);
+		return new HashMap<>();
 	}
-
 }

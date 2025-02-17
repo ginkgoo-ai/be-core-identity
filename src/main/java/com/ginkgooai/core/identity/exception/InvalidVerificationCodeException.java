@@ -1,5 +1,6 @@
 package com.ginkgooai.core.identity.exception;
 
+import com.ginkgooai.core.common.exception.BaseException;
 import org.springframework.http.HttpStatus;
 
 public class InvalidVerificationCodeException extends BaseException {

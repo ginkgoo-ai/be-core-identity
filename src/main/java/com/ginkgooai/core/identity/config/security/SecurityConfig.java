@@ -178,6 +178,7 @@ public class SecurityConfig {
                         .permitAll()
                         //Swagger endpoints
                         .requestMatchers(
+                                "/api/identity/v3/api-docs/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
@@ -223,7 +224,12 @@ public class SecurityConfig {
                         .clearAuthentication(true)
                         .deleteCookies("JSESSIONID")
                         .permitAll()
-                ).build();
+                )
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(new ProblemDetailsAuthenticationEntryPoint())
+                        .accessDeniedHandler(new ProblemDetailsAccessDeniedHandler())
+                )
+                .build();
     }
 
     @Bean

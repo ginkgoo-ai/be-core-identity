@@ -88,10 +88,11 @@ security:
       - ${core-gateway-uri}
       - ${AUTH_CLIENT}
       - ${SLATE_URI}
+      
 springdoc:
   api-docs:
     enabled: true
-    path: /v3/api-docs
+    path: /api/identity/v3/api-docs
     
 logging:
   level:

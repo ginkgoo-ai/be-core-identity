@@ -1,5 +1,6 @@
 package com.ginkgooai.core.identity.exception;
 
+import com.ginkgooai.core.common.exception.BaseRuntimeException;
 import org.springframework.http.HttpStatus;
 
 public class MfaVerificationException extends BaseRuntimeException {

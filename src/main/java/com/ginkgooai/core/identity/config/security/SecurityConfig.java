@@ -178,6 +178,7 @@ public class SecurityConfig {
                         //View endpoint
                         .requestMatchers("/oauth2/authorize",
 //                                "oauth2/consent",
+                                "/connect/logout",
                                 "/api/oauth2/clients",
                                 "/oauth2/token",
                                 "/login",

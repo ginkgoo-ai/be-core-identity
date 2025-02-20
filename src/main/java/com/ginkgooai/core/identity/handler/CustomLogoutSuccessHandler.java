@@ -1,12 +1,14 @@
 package com.ginkgooai.core.identity.handler;
 
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.authorization.oidc.authentication.OidcLogoutAuthenticationToken;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -14,14 +16,11 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
-import java.util.Set;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class CustomLogoutSuccessHandler implements AuthenticationSuccessHandler {
-   
-    @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
@@ -29,15 +28,15 @@ public class CustomLogoutSuccessHandler implements AuthenticationSuccessHandler 
                                         Authentication authentication) throws IOException, ServletException {
         
         if (authentication instanceof OidcLogoutAuthenticationToken logoutToken) {
-            String subject = logoutToken.getIdToken().getSubject();
-            
             try {
-                String sessionPattern = "spring:session:sessions:" + subject + "*";
-                Set<String> keys = redisTemplate.keys(sessionPattern);
-                if (keys != null && !keys.isEmpty()) {
-                    redisTemplate.delete(keys);
-                    log.info("Cleared {} sessions for user {}", keys.size(), subject);
+                HttpSession session = request.getSession(false);
+                if (session != null) {
+                    session.invalidate();
                 }
+
+                SecurityContextHolder.clearContext();
+
+                clearCookies(request, response);
 
                 String postLogoutRedirectUri = logoutToken.getPostLogoutRedirectUri();
                 if (!ObjectUtils.isEmpty(postLogoutRedirectUri)) {
@@ -52,6 +51,21 @@ public class CustomLogoutSuccessHandler implements AuthenticationSuccessHandler 
             } catch (Exception e) {
                 log.error("Error during logout process", e);
                 response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            }
+        }
+    }
+
+    private void clearCookies(HttpServletRequest request, HttpServletResponse response) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().startsWith("JSESSIONID") ||
+                        cookie.getName().startsWith("SESSION")) {
+                    cookie.setValue("");
+                    cookie.setPath("/");
+                    cookie.setMaxAge(0);
+                    response.addCookie(cookie);
+                }
             }
         }
     }

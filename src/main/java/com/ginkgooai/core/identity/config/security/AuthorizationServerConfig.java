@@ -18,6 +18,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.client.oidc.session.OidcSessionRegistry;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
@@ -46,9 +47,12 @@ public class AuthorizationServerConfig {
 
     @Autowired
     private UserService userService;
-   
+
     @Value("${app.auth-server-uri}")
-    private String authServerUrl; 
+    private String authServerUrl;
+   
+    @Autowired
+    private CustomLogoutSuccessHandler customLogoutSuccessHandler;
 
     @Bean
     public AuthorizationServerSettings authorizationServerSettings() {
@@ -94,8 +98,9 @@ public class AuthorizationServerConfig {
                                                 .userInfoMapper(userInfoMapperWithCustomClaims())
                                         )
                                         .logoutEndpoint(logout -> logout
-                                                .logoutResponseHandler(new CustomLogoutSuccessHandler())
+                                                .logoutResponseHandler(customLogoutSuccessHandler)
                                         )
+                                        .clientRegistrationEndpoint(Customizer.withDefaults())
                                 )
 
                 )

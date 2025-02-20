@@ -2,6 +2,7 @@ package com.ginkgooai.core.identity.config.security;
 
 import com.ginkgooai.core.identity.dto.UserInfoAuthentication;
 import com.ginkgooai.core.identity.dto.response.UserResponse;
+import com.ginkgooai.core.identity.handler.CustomLogoutSuccessHandler;
 import com.ginkgooai.core.identity.security.FederatedIdentityIdTokenCustomizer;
 import com.ginkgooai.core.identity.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -92,6 +93,9 @@ public class AuthorizationServerConfig {
                                         .userInfoEndpoint(userInfo -> userInfo
                                                 .userInfoMapper(userInfoMapperWithCustomClaims())
                                         )
+                                        .logoutEndpoint(logout -> logout
+                                                .logoutResponseHandler(new CustomLogoutSuccessHandler())
+                                        )
                                 )
 
                 )
@@ -134,6 +138,7 @@ public class AuthorizationServerConfig {
             return buildOidcUserInfo(userResponse, sub);
         };
     }
+
 
     private String extractEmail(OAuth2Authorization authorization) {
         Object principal = authorization.getAttribute("java.security.Principal");

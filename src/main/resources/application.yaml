@@ -1,8 +1,9 @@
 core-identity-uri: ${SERVICE_SCHEME}://${CORE_IDENTITY_HOST}:${CORE_IDENTITY_PORT}
 core-gateway-uri: ${SERVICE_SCHEME}://${CORE_GATEWAY_HOST}:${CORE_GATEWAY_PORT}
+core-gateway-public-uri: ${APP_SCHEME}://${CORE_GATEWAY_PUBLIC_HOST}:${CORE_GATEWAY_PUBLIC_PORT}
 
 server:
-  port: 8080
+  port: ${CORE_IDENTITY_PORT}
   shutdown: graceful
 
 spring:
@@ -88,12 +89,15 @@ security:
       - ${core-gateway-uri}
       - ${AUTH_CLIENT}
       - ${SLATE_URI}
-      
+
 springdoc:
   api-docs:
     enabled: true
     path: /api/identity/v3/api-docs
-    
+  swagger-ui:
+    enabled: true
+    path: /api/identity/swagger-ui.html
+      
 logging:
   level:
     root: ${LOG_LEVEL_ROOT:INFO}

@@ -29,6 +29,8 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
@@ -113,6 +115,11 @@ public class SecurityConfig {
     }
 
     @Bean
+    public SessionRegistry sessionRegistry() {
+        return new SessionRegistryImpl();
+    }
+
+    @Bean
     @Order(2)
     public SecurityFilterChain adminApiSecurityFilterChain(HttpSecurity http) throws Exception {
         return configureResourceServer(http)
@@ -128,7 +135,9 @@ public class SecurityConfig {
                 )
                 .anonymous(anonymous -> anonymous.disable())
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                        .maximumSessions(1)
+                        .sessionRegistry(sessionRegistry())
                 )
                 // Add custom filters
                 .addFilterBefore(adminIpFilter, UsernamePasswordAuthenticationFilter.class)
@@ -178,10 +187,12 @@ public class SecurityConfig {
                         .permitAll()
                         //Swagger endpoints
                         .requestMatchers(
-                                "/api/identity/v3/api-docs/**",
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
+                                "/api/identity/v3/api-docs",
+                                "/api/identity/swagger-ui.html",
+                                "/api/identity/swagger-ui/**",
+                                "/v3/api-docs",
                                 "/swagger-ui.html",
+                                "/swagger-ui/**",
                                 "/webjars/**"
                         ).permitAll()
                         //health endpoints
@@ -223,6 +234,7 @@ public class SecurityConfig {
                         .invalidateHttpSession(true)
                         .clearAuthentication(true)
                         .deleteCookies("JSESSIONID")
+                        .deleteCookies("SESSION")
                         .permitAll()
                 )
                 .exceptionHandling(exceptions -> exceptions

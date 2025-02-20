@@ -19,9 +19,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,6 +44,14 @@ public class UserInfoController {
     private final OAuth2AuthorizationRequestResolver defaultAuthorizationRequestResolver;
     
     private final AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository;
+
+    @GetMapping("/me")
+    @Operation(summary = "Get user info", description = "Retrieve information about the currently authenticated user")
+    public ResponseEntity<UserResponse> getUserInfo(@AuthenticationPrincipal Jwt jwt) {
+        log.debug("Retrieving info for user: {}", jwt.getSubject());
+        UserInfo userInfo = userService.getUserById(jwt.getSubject());
+        return ResponseEntity.ok(UserResponse.from(userInfo));
+    }
 
     @GetMapping("/{userId}")
     @Operation(summary = "Get user info", description = "Retrieve information about the currently authenticated user")

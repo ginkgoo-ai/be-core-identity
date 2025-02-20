@@ -14,27 +14,30 @@ import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import java.io.IOException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
+@Slf4j
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
-@Slf4j
 public class GlobalLoggingFilter extends OncePerRequestFilter {
     private static final List<String> JSON_CONTENT_TYPES = Arrays.asList(
-        "application/json",
-        "application/json;charset=UTF-8",
-        "application/json;charset=utf-8"
+            "application/json",
+            "application/json;charset=UTF-8",
+            "application/json;charset=utf-8"
     );
 
     private static final List<String> EXCLUDE_PATHS = Arrays.asList(
-        "/actuator",
-        "/swagger",
-        "/v3/api-docs"
+            "/actuator",
+            "/swagger",
+            "/v3/api-docs",
+            "/favicon.ico",
+            "/static",
+            "/webjars"
     );
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -43,104 +46,90 @@ public class GlobalLoggingFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) 
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
-        
-        if (!(request instanceof ContentCachingRequestWrapper)) {
-            request = new ContentCachingRequestWrapper(request);
-        }
+
+        ContentCachingRequestWrapper requestWrapper = request instanceof ContentCachingRequestWrapper ?
+                (ContentCachingRequestWrapper) request : new ContentCachingRequestWrapper(request);
         ContentCachingResponseWrapper responseWrapper = new ContentCachingResponseWrapper(response);
-        
+
         long startTime = System.currentTimeMillis();
-        
         try {
-            logRequest((ContentCachingRequestWrapper) request);
-            chain.doFilter(request, responseWrapper);
+            chain.doFilter(requestWrapper, responseWrapper);
+            logApiCall(requestWrapper, responseWrapper, System.currentTimeMillis() - startTime);
         } finally {
-            logResponse(responseWrapper, System.currentTimeMillis() - startTime);
             responseWrapper.copyBodyToResponse();
         }
     }
 
-    private void logRequest(ContentCachingRequestWrapper request) throws IOException {
-        log.info("=========================== Request Start ===========================");
-        log.info("URI: {} {}", request.getMethod(), request.getRequestURI());
-        
-        String queryString = request.getQueryString();
-        if (queryString != null) {
-            log.info("Query String: {}", queryString);
-        }
-        
-        Collections.list(request.getHeaderNames()).forEach(headerName -> 
-            log.info("Header {}: {}", headerName, request.getHeader(headerName)));
-        
-        String contentType = request.getContentType();
-        byte[] content = request.getContentAsByteArray();
-        if (content.length > 0) {
-            String contentBody = new String(content, request.getCharacterEncoding());
-            if (isJsonContent(contentType)) {
-                log.info("Request Body (JSON): {}", formatJson(contentBody));
-            } else if (contentType != null && contentType.contains("form")) {
-                log.info("Request Body (Form): {}", formatFormData(contentBody));
-            } else {
-                log.info("Request Body: {}", contentBody);
-            }
+    private void logApiCall(ContentCachingRequestWrapper request, ContentCachingResponseWrapper response, long timeElapsed) {
+        try {
+            String requestBody = getRequestBody(request);
+            String responseBody = getResponseBody(response);
+
+            log.info("API Call - {} {} - Status: {} - Time: {}ms\n-> Request: {}\n<- Response: {}",
+                    request.getMethod(),
+                    getFullRequestPath(request),
+                    response.getStatus(),
+                    timeElapsed,
+                    requestBody,
+                    responseBody
+            );
+        } catch (Exception e) {
+            log.warn("Failed to log API call", e);
         }
     }
 
-    private void logResponse(ContentCachingResponseWrapper response, long timeElapsed) throws IOException {
-        String contentType = response.getContentType();
-        byte[] content = response.getContentAsByteArray();
-        
-        log.info("Response Status: {}", response.getStatus());
-        log.info("Time Elapsed: {}ms", timeElapsed);
-        
-        // 记录响应头
-        response.getHeaderNames().forEach(headerName -> 
-            log.info("Response Header {}: {}", headerName, response.getHeader(headerName)));
-        
-        if (content.length > 0) {
-            String responseBody = new String(content, response.getCharacterEncoding());
-            if (isJsonContent(contentType)) {
-                log.info("Response Body (JSON): {}", formatJson(responseBody));
-            } else {
-                log.info("Response Body: {}", responseBody);
-            }
+    private String getFullRequestPath(ContentCachingRequestWrapper request) {
+        String queryString = request.getQueryString();
+        return queryString != null ?
+                request.getRequestURI() + "?" + queryString :
+                request.getRequestURI();
+    }
+
+    private String getRequestBody(ContentCachingRequestWrapper request) throws UnsupportedEncodingException {
+        byte[] content = request.getContentAsByteArray();
+        if (content.length == 0) {
+            return "";
         }
-        
-        log.info("=========================== Request End ===========================\n");
+
+        String contentType = request.getContentType();
+        String contentBody = new String(content, request.getCharacterEncoding());
+
+        if (isJsonContent(contentType)) {
+            return formatJson(contentBody);
+        }
+        return "Binary Content";
+    }
+
+    private String getResponseBody(ContentCachingResponseWrapper response) throws UnsupportedEncodingException {
+        byte[] content = response.getContentAsByteArray();
+        if (content.length == 0) {
+            return "";
+        }
+
+        String contentType = response.getContentType();
+        String responseBody = new String(content, response.getCharacterEncoding());
+
+        if (isJsonContent(contentType)) {
+            return formatJson(responseBody);
+        }
+        return "Binary Content";
     }
 
     private boolean isJsonContent(String contentType) {
         if (contentType == null) return false;
         String lowerContentType = contentType.toLowerCase();
         return JSON_CONTENT_TYPES.stream()
-            .anyMatch(lowerContentType::contains);
+                .anyMatch(lowerContentType::contains);
     }
 
     private String formatJson(String content) {
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            Object json = mapper.readValue(content, Object.class);
-            return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
+            Object json = objectMapper.readValue(content, Object.class);
+            return objectMapper.writeValueAsString(json);
         } catch (Exception e) {
-            return content;
-        }
-    }
-
-    private String formatFormData(String content) {
-        try {
-            StringBuilder formatted = new StringBuilder();
-            String[] pairs = content.split("&");
-            for (String pair : pairs) {
-                String[] keyValue = pair.split("=");
-                String key = URLDecoder.decode(keyValue[0], StandardCharsets.UTF_8.name());
-                String value = keyValue.length > 1 ? 
-                    URLDecoder.decode(keyValue[1], StandardCharsets.UTF_8.name()) : "";
-                formatted.append(key).append(" = ").append(value).append("\n");
-            }
-            return formatted.toString();
-        } catch (Exception e) {
+            log.warn("Failed to format JSON content", e);
             return content;
         }
     }

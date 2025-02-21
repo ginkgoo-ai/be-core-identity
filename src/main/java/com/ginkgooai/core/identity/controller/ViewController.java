@@ -4,6 +4,7 @@ import com.ginkgooai.core.identity.domain.TokenIdentity;
 import com.ginkgooai.core.identity.exception.InvalidVerificationCodeException;
 import com.ginkgooai.core.identity.exception.ResourceNotFoundException;
 import com.ginkgooai.core.identity.service.UserService;
+import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +29,7 @@ import java.util.Set;
 @Controller
 @Slf4j
 @RequestMapping("")
+@Hidden
 public class ViewController {
 
     @Value("${core-gateway-uri}")

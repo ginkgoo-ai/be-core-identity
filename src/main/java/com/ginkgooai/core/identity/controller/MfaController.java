@@ -6,6 +6,7 @@ import com.ginkgooai.core.identity.dto.request.MfaVerificationRequest;
 import com.ginkgooai.core.identity.dto.response.MfaInfoResponse;
 import com.ginkgooai.core.identity.exception.InvalidVerificationCodeException;
 import com.ginkgooai.core.identity.service.MfaService;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -24,10 +25,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/users/{userId}/mfa")
-@Tag(name = "MFA Management", description = "APIs for managing Multi-Factor Authentication")
 @RequiredArgsConstructor
 @Validated
 @Slf4j
+@Tag(name = "MFA Management", description = "APIs for managing Multi-Factor Authentication")
+@Hidden
 public class MfaController {
 
     private final MfaService mfaService;

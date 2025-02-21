@@ -134,7 +134,7 @@ public class UserRepositoryOAuth2UserHandler implements Consumer<OAuth2User> {
 		user.setEmail(userInfo.getEmail());
 		user.setFirstName(userInfo.getFirstName());
 		user.setLastName(userInfo.getLastName());
-		user.setStatus(UserStatus.ACTIVE);
+		user.setStatus(UserStatus.INACTIVE);
 
 		Role userRole = roleRepository.findByName(Role.ROLE_USER)
 				.orElseThrow(() -> new RuntimeException("Default role not found"));
@@ -152,9 +152,6 @@ public class UserRepositoryOAuth2UserHandler implements Consumer<OAuth2User> {
 		}
 		if (userInfo.getPicture() != null) {
 			user.setPicture(userInfo.getPicture());
-		}
-		if (userInfo.isEmailVerified()) {
-			user.setStatus(UserStatus.ACTIVE);
 		}
 	}
 

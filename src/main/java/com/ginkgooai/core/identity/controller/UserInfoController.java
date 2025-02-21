@@ -5,6 +5,7 @@ import com.ginkgooai.core.identity.dto.request.*;
 import com.ginkgooai.core.identity.dto.response.UserResponse;
 import com.ginkgooai.core.identity.exception.InvalidVerificationCodeException;
 import com.ginkgooai.core.identity.service.UserService;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -35,18 +36,10 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "User Management", description = "APIs for user self-registration and account management")
 public class UserInfoController {
 
-    private static final boolean AUTO_LOGIN = false;
-
-    static final String SAVED_REQUEST = "SPRING_SECURITY_SAVED_REQUEST";
-
     private final UserService userService;
 
-    private final OAuth2AuthorizationRequestResolver defaultAuthorizationRequestResolver;
-    
-    private final AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository;
-
     @GetMapping("/me")
-    @Operation(summary = "Get user info", description = "Retrieve information about the currently authenticated user")
+    @Operation(summary = "Get user info", description = "MVP:Retrieve information about the currently authenticated user")
     public ResponseEntity<UserResponse> getUserInfo(@AuthenticationPrincipal Jwt jwt) {
         log.debug("Retrieving info for user: {}", jwt.getSubject());
         UserInfo userInfo = userService.getUserById(jwt.getSubject());
@@ -55,6 +48,7 @@ public class UserInfoController {
 
     @GetMapping("/{userId}")
     @Operation(summary = "Get user info", description = "Retrieve information about the currently authenticated user")
+    @Hidden
     public ResponseEntity<UserResponse> getUserInfo(@PathVariable String userId) {
         log.debug("Retrieving info for user: {}", userId);
         UserInfo userInfo = userService.getUserById(userId);
@@ -97,6 +91,7 @@ public class UserInfoController {
             @ApiResponse(responseCode = "410", description = "Verification code expired",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
+    @Hidden
     public ResponseEntity<Void> verifyEmail(
             @Parameter(description = "User ID", required = true)
             @PathVariable @NotBlank String userId,
@@ -118,6 +113,7 @@ public class UserInfoController {
             @ApiResponse(responseCode = "404", description = "User not found",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
+    @Hidden
     public ResponseEntity<Void> initiatePasswordReset(
             @RequestBody @Valid @Parameter(description = "Password reset request details", required = true)
             PasswordResetRequest request) {
@@ -141,6 +137,7 @@ public class UserInfoController {
             @ApiResponse(responseCode = "410", description = "Reset token expired",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
+    @Hidden
     public ResponseEntity<Void> completePasswordReset(
             @PathVariable("token") @Parameter(description = "Password reset token", required = true) String token,
             @RequestBody @Valid @Parameter(description = "Password reset confirmation details", required = true)
@@ -163,6 +160,7 @@ public class UserInfoController {
             @ApiResponse(responseCode = "404", description = "User not found",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
+    @Hidden
     public ResponseEntity<Void> changePassword(
             @PathVariable @NotBlank String userId,
             @RequestBody @Valid @Parameter(description = "Password change details", required = true)

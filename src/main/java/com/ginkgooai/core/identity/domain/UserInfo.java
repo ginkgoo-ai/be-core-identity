@@ -44,6 +44,9 @@ public class UserInfo implements UserDetails {
     @Column(name = "last_name", length = 100)
     private String lastName;
 
+    @Column(name = "name", length = 100)
+    private String name;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20, nullable = false)
     private UserStatus status = UserStatus.INACTIVE;

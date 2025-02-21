@@ -2,6 +2,7 @@ package com.ginkgooai.core.identity.controller;
 
 import com.ginkgooai.core.identity.dto.request.CreateClientRequest;
 import com.ginkgooai.core.identity.dto.response.RegisteredClientDTO;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -36,6 +37,7 @@ import java.util.UUID;
 @RequestMapping("/admin/oauth2/clients")
 @RequiredArgsConstructor
 @Tag(name = "OAuth2 Client Management", description = "APIs for managing OAuth2 client applications")
+@Hidden
 @SecurityRequirement(name = "bearerAuth")
 public class OAuth2ClientController {
 

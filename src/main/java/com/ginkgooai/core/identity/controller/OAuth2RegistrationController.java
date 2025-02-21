@@ -4,6 +4,7 @@ import com.ginkgooai.core.identity.domain.OAuth2ClientRegistration;
 import com.ginkgooai.core.identity.domain.enums.RegistrationStatus;
 import com.ginkgooai.core.identity.exception.ResourceNotFoundException;
 import com.ginkgooai.core.identity.repository.OAuth2ClientRegistrationRepository;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -33,6 +34,7 @@ import java.util.List;
 @Tag(name = "OAuth2 Client Registration Management",
         description = "APIs for managing OAuth2 client registrations in the identity service")
 @SecurityRequirement(name = "bearerAuth")
+@Hidden
 public class OAuth2RegistrationController {
 
     private final OAuth2ClientRegistrationRepository clientRegistrationRepository;

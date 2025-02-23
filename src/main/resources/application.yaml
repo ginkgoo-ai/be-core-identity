@@ -96,6 +96,8 @@ springdoc:
     path: /api/identity/v3/api-docs
   swagger-ui:
     enabled: true
+    csrf:
+      enabled: true
     path: /api/identity/swagger-ui.html
       
 logging:

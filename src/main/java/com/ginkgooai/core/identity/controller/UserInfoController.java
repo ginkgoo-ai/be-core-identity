@@ -172,4 +172,24 @@ public class UserInfoController {
         log.info("Password changed successfully for user ID: {}", userId);
         return ResponseEntity.ok().build();
     }
+
+    @PatchMapping("/{userId}")
+    @Operation(summary = "Patch User info",
+            description = "Patch user info for authenticated user")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Patch User info successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+    })
+    public ResponseEntity<Void> patchUserInfo(
+            @PathVariable @NotBlank String userId,
+            @RequestBody @Valid @Parameter(description = "Patch user info request details", required = true)
+            PatchUserRequest request) {
+        log.debug("Patch user info for user ID: {}", userId);
+
+        userService.patchUserInfo(userId, request.getFileId(), request.getLastName(), request.getLastName());
+
+        log.info("Patch user info for user ID: {}", userId);
+        return ResponseEntity.ok().build();
+    }
 }

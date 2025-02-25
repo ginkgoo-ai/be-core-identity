@@ -14,6 +14,7 @@ import com.ginkgooai.core.identity.service.verification.EmailVerificationStrateg
 import com.ginkgooai.core.identity.service.verification.EmailVerificationStrategyFactory;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,6 +23,7 @@ import org.springframework.security.web.savedrequest.DefaultSavedRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.HashSet;
@@ -239,5 +241,29 @@ public class UserService {
         verificationCodeService.invalidateCode(userId);
 
         log.info("Successfully reset password for user ID: {}", userId);
+    }
+
+    public void patchUserInfo(@NotBlank String userId, String fileId, String firstName, String lastName) {
+
+        UserInfo user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+
+
+        UserInfo updatedUser = UserInfo.builder()
+                .id(userId)
+                .picture(processField(fileId, user.getPicture()))
+                .lastName(processField(lastName, user.getLastName()))
+                .firstName(processField(firstName, user.getFirstName()))
+                .build();
+
+        userRepository.updateSelective(updatedUser);
+
+    }
+
+    private String processField(String newValue, String currentValue) {
+        if (StringUtils.hasText(newValue) && (!newValue.equals(currentValue))) {
+                return newValue;
+        }
+        return currentValue;
     }
 }

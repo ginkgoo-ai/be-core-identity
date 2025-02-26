@@ -243,7 +243,7 @@ public class UserService {
         log.info("Successfully reset password for user ID: {}", userId);
     }
 
-    public void patchUserInfo(@NotBlank String userId, String fileId, String firstName, String lastName) {
+    public void patchUserInfo(@NotBlank String userId, String fileId, String name) {
 
         UserInfo user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
@@ -252,8 +252,7 @@ public class UserService {
         UserInfo updatedUser = UserInfo.builder()
                 .id(userId)
                 .picture(processField(fileId, user.getPicture()))
-                .lastName(processField(lastName, user.getLastName()))
-                .firstName(processField(firstName, user.getFirstName()))
+                .name(name)
                 .build();
 
         userRepository.updateSelective(updatedUser);

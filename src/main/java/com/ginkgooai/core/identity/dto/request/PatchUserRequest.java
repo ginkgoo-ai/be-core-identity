@@ -21,19 +21,11 @@ public class PatchUserRequest {
     private String fileId;
 
     @Schema(
-            title = "First Name",
-            description = "User's first name",
+            title = "Name",
+            description = "User's name",
             example = "John",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED
     )
-    private String firstName;
-
-    @Schema(
-            title = "Last Name",
-            description = "User's last name",
-            example = "Doe",
-            requiredMode = Schema.RequiredMode.NOT_REQUIRED
-    )
-    private String lastName;
+    private String name;
 
 }

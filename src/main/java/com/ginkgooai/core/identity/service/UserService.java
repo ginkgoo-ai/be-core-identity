@@ -243,6 +243,7 @@ public class UserService {
         log.info("Successfully reset password for user ID: {}", userId);
     }
 
+    @Transactional
     public void patchUserInfo(@NotBlank String userId, String fileId, String name) {
 
         UserInfo user = userRepository.findById(userId)

@@ -17,8 +17,7 @@ public interface UserRepository extends JpaRepository<UserInfo, String> {
     @Modifying
     @Query("UPDATE UserInfo u SET " +
             "u.picture = COALESCE(:#{#user.picture}, u.picture), " +
-            "u.lastName = COALESCE(:#{#user.lastName}, u.lastName), " +
-            "u.firstName = COALESCE(:#{#user.firstName}, u.firstName) " +
+            "u.name = COALESCE(:#{#user.firstName}, u.name) " +
             "WHERE u.id = :#{#user.id}")
     void updateSelective(@Param("user") UserInfo user);
 }

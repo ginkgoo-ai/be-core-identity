@@ -3,452 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign In - Ginkgoo Identity</title>
+    <title>Sign In - Slate</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              slate: {
+                primary: '#8B5CF6',  // 紫色
+                secondary: '#EC4899', // 粉色
+              },
+            },
+            backgroundImage: {
+              'gradient-primary': 'linear-gradient(to right, #8B5CF6, #EC4899)',
+            },
+          },
+        },
+      }
+    </script>
+    <style>
+        .google-btn:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #E8EAED, 0 0 0 4px #4285F4;
+        }
+
+        .gradient-text {
+            background: linear-gradient(to right, #8B5CF6, #EC4899);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .gradient-border:hover {
+            background: linear-gradient(white, white) padding-box,
+            linear-gradient(to right, #8B5CF6, #EC4899) border-box;
+            border: 1px solid transparent;
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-gray-50">
-<div class="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">
-    <div class="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 class="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
-            Sign in to your account
-        </h2>
+<body class="min-h-screen bg-white">
+<div class="flex min-h-screen">
+    <!-- Left Side - Image -->
+    <div class="hidden lg:block lg:w-1/2 relative p-8">
+        <div class="w-full h-full rounded-3xl overflow-hidden">
+            <img th:src="@{/static/images/clapperboard.png}"
+                 alt="Login visual"
+                 class="object-cover w-full h-full">
+        </div>
     </div>
 
-    <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
-        <div class="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
-<!--            <form id="loginForm" class="space-y-6" action="/login" method="POST">-->
-            <form class="space-y-6" action="/login" method="POST" novalidate>
-                <div>
-                    <label for="email" class="block text-sm font-medium leading-6 text-gray-900">Email address</label>
-                    <div class="mt-2">
-                        <input id="email" name="email" type="email" autocomplete="email" required
-                               class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 px-3">
+
+    <!-- Right Side - Login Form -->
+    <div class="w-full lg:w-1/2 flex flex-col justify-center px-8 lg:px-16">
+        <div class="max-w-md w-full mx-auto">
+            <!-- Logo -->
+            <div class="flex justify-center mb-8">
+                <img th:src="@{/static/images/logo.png}" alt="slate" class="h-8">
+            </div>
+
+            <!-- Welcome Text -->
+            <h2 class="text-3xl font-bold gradient-text text-center mb-2">
+                Welcome Back
+            </h2>
+            <p class="text-center text-gray-600 mb-12">
+                Sign in to continue to your account
+            </p>
+
+            <!-- Google Sign In Button -->
+            <a href="/oauth2/authorization/google"
+               class="google-btn gradient-border flex items-center justify-center w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm bg-white hover:bg-gray-50 transition-colors mb-4 group">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                     alt="Google logo"
+                     class="w-5 h-5 mr-3">
+                <span class="text-gray-700 font-medium group-hover:text-gray-900">Continue with Google</span>
+            </a>
+
+            <!-- Error Message -->
+            <div th:if="${param.error}"
+                 class="mt-4 p-4 rounded-lg bg-red-50 text-red-700 animate-fade-in">
+                <div class="flex items-center">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    <div>
+                        <p class="font-medium">Authentication Error</p>
+                        <p th:if="${session.SPRING_SECURITY_LAST_EXCEPTION != null}"
+                           th:text="${session.SPRING_SECURITY_LAST_EXCEPTION.message}"
+                           class="text-sm">
+                            Error details
+                        </p>
                     </div>
-                </div>
-
-                <div>
-                    <label for="password" class="block text-sm font-medium leading-6 text-gray-900">Password</label>
-                    <div class="mt-2">
-                        <input id="password" name="password" type="password" autocomplete="current-password" required
-                               class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 px-3">
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center">
-                        <input id="remember-me" name="remember-me" type="checkbox"
-                               class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600">
-                        <label for="remember-me" class="ml-3 block text-sm leading-6 text-gray-900">Remember me</label>
-                    </div>
-
-                    <div class="text-sm leading-6">
-                        <a href="/reset-password" class="font-semibold text-indigo-600 hover:text-indigo-500">Forgot password?</a>
-                    </div>
-                </div>
-
-                <!-- CSRF token -->
-                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-
-                <div>
-                    <button type="submit"
-                            class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                        Sign in
-                    </button>
-                </div>
-            </form>
-
-            <!-- 注册表单，默认隐藏 -->
-            <form id="registerForm" class="space-y-6 hidden">
-                <div>
-                    <label for="register-email" class="block text-sm font-medium leading-6 text-gray-900">Email
-                        address</label>
-                    <div class="mt-2">
-                        <input id="register-email" name="email" type="email" required
-                               class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 px-3">
-                    </div>
-                </div>
-
-                <div>
-                    <label for="register-password" class="block text-sm font-medium leading-6 text-gray-900">Password</label>
-                    <div class="mt-2 relative">
-                        <input id="register-password" name="password" type="password" required
-                               class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 px-3">
-                        <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center" onclick="togglePasswordVisibility('register-password')">
-                            <i class="fas fa-eye text-gray-400"></i>
-                        </button>
-                    </div>
-
-                    <div class="mt-3 p-4 bg-gray-50 rounded-md">
-                        <p class="text-sm font-medium text-gray-700 mb-2">Your password must contain:</p>
-                        <ul class="space-y-2">
-                            <li class="text-sm flex items-center" id="length-check">
-                                <i class="fas fa-circle mr-2 text-xs"></i>
-                                At least 12 characters
-                            </li>
-                            <li class="text-sm flex items-center" id="lowercase-check">
-                                <i class="fas fa-circle mr-2 text-xs"></i>
-                                Lower case letters (a-z)
-                            </li>
-                            <li class="text-sm flex items-center" id="uppercase-check">
-                                <i class="fas fa-circle mr-2 text-xs"></i>
-                                Upper case letters (A-Z)
-                            </li>
-                            <li class="text-sm flex items-center" id="number-check">
-                                <i class="fas fa-circle mr-2 text-xs"></i>
-                                Numbers (0-9)
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div>
-                    <label for="register-confirm-password" class="block text-sm font-medium leading-6 text-gray-900">Confirm Password</label>
-                    <div class="mt-2 relative">
-                        <input id="register-confirm-password" name="confirmPassword" type="password" required
-                               class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 px-3">
-                        <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center" onclick="togglePasswordVisibility('register-confirm-password')">
-                            <i class="fas fa-eye text-gray-400"></i>
-                        </button>
-                    </div>
-                </div>
-
-
-                <div>
-                    <button type="submit"
-                            class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                        Register
-                    </button>
-                </div>
-            </form>
-
-            <form id="verificationForm" class="space-y-6 hidden">
-                <div>
-                    <label for="verification-code" class="block text-sm font-medium leading-6 text-gray-900">Verification
-                        Code</label>
-                    <div class="mt-2">
-                        <input id="verification-code" name="verificationCode" type="text" required
-                               class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 px-3">
-                    </div>
-                </div>
-
-                <div>
-                    <button type="submit"
-                            class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                        Verify Account
-                    </button>
-                </div>
-            </form>
-
-            <!-- MFA Verification Form (Initially Hidden) -->
-            <form id="mfaForm" class="space-y-6 hidden">
-                <div>
-                    <label for="mfa-code" class="block text-sm font-medium leading-6 text-gray-900">Authentication Code</label>
-                    <div class="mt-2">
-                        <input id="mfa-code" name="mfaCode" type="text" required
-                               placeholder="Enter 6-digit code"
-                               class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 px-3">
-                    </div>
-                    <p class="mt-2 text-sm text-gray-500">
-                        Please enter the authentication code from your authenticator app or email
-                    </p>
-                </div>
-
-                <div>
-                    <button type="submit"
-                            class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                        Verify
-                    </button>
-                </div>
-            </form>
-
-            <div>
-                <div class="relative mt-10">
-                    <div class="absolute inset-0 flex items-center" aria-hidden="true">
-                        <div class="w-full border-t border-gray-200"></div>
-                    </div>
-                    <div class="relative flex justify-center text-sm font-medium leading-6">
-                        <span class="bg-white px-6 text-gray-900">Or continue with</span>
-                    </div>
-                </div>
-
-                <!-- 社交登录按钮 -->
-                <div class="mt-6 grid grid-cols-2 gap-4">
-                    <a href="/oauth2/authorization/google"
-                       class="flex w-full items-center justify-center gap-3 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus-visible:ring-transparent">
-                        <i class="fab fa-google text-[#4285F4]"></i>
-                        <span class="text-sm font-semibold">Google</span>
-                    </a>
-
-                    <a href="/oauth2/authorization/github"
-                       class="flex w-full items-center justify-center gap-3 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus-visible:ring-transparent">
-                        <i class="fab fa-github"></i>
-                        <span class="text-sm font-semibold">GitHub</span>
-                    </a>
                 </div>
             </div>
-        </div>
 
-        <p class="mt-10 text-center text-sm text-gray-500">
-            <span id="toggleText">Not a member?</span>
-            <a href="#" onclick="toggleForm()" class="font-semibold leading-6 text-indigo-600 hover:text-indigo-500">
-                <span id="toggleLink">Create an account</span>
-            </a>
-        </p>
-    </div>
-</div>
+            <!-- Terms and Privacy -->
+            <div class="mt-12">
+                <p class="text-center text-sm text-gray-500">
+                    By continuing, you agree to our
+                    <a href="/terms" class="text-slate-primary hover:text-slate-secondary font-medium transition-colors">Terms of Service</a> and
+                    <a href="/privacy" class="text-slate-primary hover:text-slate-secondary font-medium transition-colors">Privacy Policy</a>
+                </p>
 
-<!-- 错误提示 -->
-<div th:if="${param.error}" class="fixed bottom-4 right-4 bg-red-50 text-red-700 px-4 py-3 rounded-lg shadow-lg">
-    <div class="flex items-center">
-        <i class="fas fa-exclamation-circle mr-2"></i>
-        <div>
-            <p class="font-bold">Authentication Error</p>
-            <p th:if="${session.SPRING_SECURITY_LAST_EXCEPTION != null}"
-               th:text="${session.SPRING_SECURITY_LAST_EXCEPTION.message}">
-                Error details
-            </p>
+                <p class="mt-4 text-center text-sm text-gray-500">
+                    Need help? <a href="/help" class="text-slate-primary hover:text-slate-secondary font-medium transition-colors">Contact Support</a>
+                </p>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-  function toggleForm() {
-    const loginForm = document.getElementById('loginForm');
-    const registerForm = document.getElementById('registerForm');
-    const toggleText = document.getElementById('toggleText');
-    const toggleLink = document.getElementById('toggleLink');
-
-    if (loginForm.classList.contains('hidden')) {
-      loginForm.classList.remove('hidden');
-      registerForm.classList.add('hidden');
-      toggleText.textContent = 'Not a member?';
-      toggleLink.textContent = 'Create an account';
-    } else {
-      loginForm.classList.add('hidden');
-      registerForm.classList.remove('hidden');
-      toggleText.textContent = 'Already a member?';
-      toggleLink.textContent = 'Sign in';
-    }
+  // 添加错误消息自动消失功能
+  if (document.querySelector('[th\\:if="${param.error}"]')) {
+    setTimeout(() => {
+      const errorDiv = document.querySelector('[th\\:if="${param.error}"]');
+      if (errorDiv) {
+        errorDiv.style.opacity = '0';
+        errorDiv.style.transition = 'opacity 0.5s ease';
+        setTimeout(() => errorDiv.remove(), 500);
+      }
+    }, 5000);
   }
-
-  let userId = null;
-  let verificationCode = null;
-
-  function isPasswordStrong(password) {
-    const minLength = 8;
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasLowerCase = /[a-z]/.test(password);
-    const hasNumbers = /\d/.test(password);
-    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-
-    return password.length >= minLength &&
-        hasUpperCase &&
-        hasLowerCase &&
-        hasNumbers &&
-        hasSpecialChar;
-  }
-
-  document.getElementById('mfaForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    try {
-      const csrfCookie = document.cookie
-          .split('; ')
-          .find(cookie => cookie.startsWith('XSRF-TOKEN='));
-
-      if (!csrfCookie) {
-        throw new Error('CSRF token not found');
-      }
-      const csrfToken = encodeURIComponent(csrfCookie.split('=')[1]);
-
-      const formData = new URLSearchParams();
-      formData.append('email', document.getElementById('email').value);
-      formData.append('password', document.getElementById('password').value);
-      formData.append('mfaCode', document.getElementById('mfa-code').value);
-      formData.append('_csrf', csrfToken);
-
-      const response = await fetch('/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-          // 'X-XSRF-TOKEN': csrfToken,
-          'Upgrade-Insecure-Requests': '1'
-        },
-        body: formData.toString(),
-        credentials: 'include',
-        redirect: 'follow'
-      });
-
-      const contentType = response.headers.get('content-type');
-      if (response.redirected) {
-        window.location.href = response.url;
-        return;
-      }
-
-      if (contentType && contentType.includes('application/json')) {
-        const data = await response.json();
-        if (data.requireMfa) {
-          document.getElementById('loginForm').classList.add('hidden');
-          document.getElementById('mfaForm').classList.remove('hidden');
-        } else {
-          showError(data.message || 'Login failed');
-        }
-      } else if (response.ok) {
-        window.location.reload();
-      } else {
-        console.error('Error during login:', error);
-      }
-    } catch (error) {
-      console.error('Error during login:', error);
-    }
-  });
-
-  function togglePasswordVisibility(inputId) {
-    const input = document.getElementById(inputId);
-    const icon = input.nextElementSibling.querySelector('i');
-
-    if (input.type === 'password') {
-      input.type = 'text';
-      icon.classList.remove('fa-eye');
-      icon.classList.add('fa-eye-slash');
-    } else {
-      input.type = 'password';
-      icon.classList.remove('fa-eye-slash');
-      icon.classList.add('fa-eye');
-    }
-  }
-
-  function updatePasswordStrength(password) {
-    const checks = {
-      length: password.length >= 12,
-      lowercase: /[a-z]/.test(password),
-      uppercase: /[A-Z]/.test(password),
-      number: /[0-9]/.test(password)
-    };
-
-    // 更新检查标记
-    Object.keys(checks).forEach(check => {
-      const element = document.getElementById(`${check}-check`);
-      const icon = element.querySelector('i');
-
-      if (checks[check]) {
-        element.classList.remove('text-gray-500');
-        element.classList.add('text-green-600');
-        icon.classList.remove('fa-circle');
-        icon.classList.add('fa-check-circle');
-      } else {
-        element.classList.remove('text-green-600');
-        element.classList.add('text-gray-500');
-        icon.classList.remove('fa-check-circle');
-        icon.classList.add('fa-circle');
-      }
-    });
-
-    return Object.values(checks).every(check => check);
-  }
-
-  document.getElementById('register-password').addEventListener('input', (e) => {
-    updatePasswordStrength(e.target.value);
-  });
-
-  document.getElementById('registerForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const password = document.getElementById('register-password').value;
-    const confirmPassword = document.getElementById('register-confirm-password').value;
-
-    if (!updatePasswordStrength(password)) {
-      alert('Please meet all password requirements');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      alert('Passwords do not match');
-      return;
-    }
-    
-    try {
-      const csrfCookie = document.cookie
-          .split('; ')
-          .find(cookie => cookie.startsWith('XSRF-TOKEN='));
-
-      if (!csrfCookie) {
-        throw new Error('CSRF token not found');
-      }
-      const csrfToken = encodeURIComponent(csrfCookie.split('=')[1]);
-
-      const formData = {
-        email: document.getElementById('register-email').value,
-        password: password,
-      };
-
-      const response = await fetch('/users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-XSRF-TOKEN': csrfToken
-        },
-        body: JSON.stringify(formData)
-      });
-
-      if (response.status === 201) {
-        const data = await response.json();
-        userId = data.id;
-        verificationCode = data.verificationCode;
-        document.getElementById('registerForm').classList.add('hidden');
-        document.getElementById('verificationForm').classList.remove('hidden');
-        alert('Registration successful! Please check your email for verification code.');
-      } else {
-        const error = await response.json();
-        alert(error.message || 'Registration failed');
-      }
-    } catch (error) {
-      console.error('Error during registration:' + error);
-      alert('An error occurred during registration');
-    }
-  });
-
-  document.getElementById('verificationForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const code = document.getElementById('verification-code').value;
-
-    try {
-      const csrfCookie = document.cookie
-          .split('; ')
-          .find(cookie => cookie.startsWith('XSRF-TOKEN='));
-
-      if (!csrfCookie) {
-        throw new Error('CSRF token not found');
-      }
-      const csrfToken = encodeURIComponent(csrfCookie.split('=')[1]);
-      
-      const response = await fetch(`/users/${userId}/email/verification`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-XSRF-TOKEN': csrfToken
-        },
-        body: JSON.stringify({verificationCode: code})
-      });
-
-      if (response.status === 200) {
-        alert('Email verification successful! Please login.');
-        window.location.href = '/login';
-      } else {
-        const error = await response.json();
-        alert(error.message || 'Verification failed');
-      }
-    } catch (error) {
-      alert('An error occurred');
-      console.error('Error:' + error);
-    }
-  });
-
 </script>
-
 </body>
 </html>

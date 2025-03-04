@@ -176,6 +176,8 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(authorize -> authorize
                         //View endpoint
+                        .requestMatchers("/static/**", "/static/images/**").permitAll()
+                        //OAuth2 endpoints
                         .requestMatchers("/oauth2/authorize",
 //                                "oauth2/consent",
                                 "/connect/logout",

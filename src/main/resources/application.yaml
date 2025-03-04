@@ -7,6 +7,17 @@ server:
   shutdown: graceful
 
 spring:
+  mvc:
+    static-path-pattern: /static/**
+    web:
+      resources:
+        static-locations: classpath:/static/
+        chain:
+          strategy:
+            content:
+              enabled: true
+              paths: /**
+              
   lifecycle:
     timeout-per-shutdown-phase: 30s
     
@@ -48,7 +59,6 @@ spring:
     app-url: ${core-identity-uri}
 
 
-
 management:
   endpoints:
     web:
@@ -60,6 +70,7 @@ management:
       enabled: false
 
 app:
+  domain-name: ${APP_DOMAIN}
   dev-uris: ${DEV_SLATE_URI}
   jwt:
   auth-server-uri: ${AUTH_SERVER}

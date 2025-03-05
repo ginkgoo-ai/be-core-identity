@@ -35,8 +35,8 @@ public class UserResponse {
             example = "true")
     private boolean enabled;
 
-    @Schema(description = "Logo file id")
-    private String logoFileId;
+    @Schema(description = "Logo file")
+    private String picture;
 
     @Schema(description = "Set of user's role names",
             example = "[\"ROLE_USER\", \"ROLE_ADMIN\"]")
@@ -50,7 +50,7 @@ public class UserResponse {
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .name(user.getName())
-                .logoFileId(user.getPicture())
+                .picture(user.getPicture())
                 .roles(user.getRoles().stream().map(Role::getName).collect(Collectors.toSet()))
                 .enabled(user.isEnabled())
                 .build();

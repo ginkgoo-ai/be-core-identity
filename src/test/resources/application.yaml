@@ -1,0 +1,116 @@
+core-identity-uri: http://127.0.0.1:9000
+core-gateway-uri: http://127.0.0.1:8080
+core-gateway-public-uri: http://127.0.0.1:8080
+
+server:
+  port: 9000 
+  shutdown: graceful
+
+spring:
+  mvc:
+    static-path-pattern: /static/**
+    web:
+      resources:
+        static-locations: classpath:/static/
+        chain:
+          strategy:
+            content:
+              enabled: true
+              paths: /**
+              
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+    
+  datasource:
+    url: jdbc:postgresql://127.0.0.1:15432/identity
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+  
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+  
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      password:
+  
+  mail:
+    host: smtp.mailtrap.io
+    port: 2525
+    username: fd21a8aeaf0fbc
+    password: 3980d9842d1fb5
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+    from: 127.0.0.1
+    app-url: 127.0.0.1
+
+
+management:
+  endpoints:
+    web:
+      base-path: ""
+      path-mapping:
+        health: health
+  health:
+    ldap:
+      enabled: false
+
+app:
+  domain-name: 127.0.0.1
+  dev-uris: 127.0.0.1
+  jwt:
+  auth-server-uri: http://127.0.0.1:9000
+  verification:
+    strategy: CODE  # Default verification strategy (CODE or URL_TOKEN)
+    code:
+      length: 6
+      expiration: 300  # 5 minutes in seconds
+      cooldown: 60     # 1 minute in seconds
+    url-token:
+      expiration: 900  # 15 minutes in seconds
+      cooldown: 60     # 1 minute in seconds
+    server-url: 127.0.0.1:8080
+
+security:
+  admin:
+    ip-whitelist:
+      - "10.0.0.0/8"
+      - "192.168.0.0/16"
+    api-key: dBj8kX7vYp4mN9qR2tW5hL1cF3nM6sQ9wZ0xV8yU4jK7gH2bP5
+    rate-limit: 10
+  jwt:
+    authority-prefix: "ROLE_"
+    authorities-claim-name: "authorities"
+  cors:
+    allowed-origins:
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /api/identity/v3/api-docs
+  swagger-ui:
+    enabled: true
+    csrf:
+      enabled: true
+    path: /api/identity/swagger-ui.html
+      
+logging:
+  level:
+    root: ${LOG_LEVEL_ROOT:INFO}
+    org.springframework.web.cors: ${LOG_LEVEL_SPRING_WEB_CORS:DEBUG}
+    org.springframework.security: ${LOG_LEVEL_SPRING_SECURITY:TRACE}
+    com.ginkgooai: ${LOG_LEVEL_GINKGOOAI:DEBUG}

@@ -4,7 +4,12 @@ import com.ginkgooai.core.identity.dto.UserInfoAuthentication;
 import com.ginkgooai.core.identity.dto.response.UserResponse;
 import com.ginkgooai.core.identity.handler.CustomLogoutSuccessHandler;
 import com.ginkgooai.core.identity.security.FederatedIdentityIdTokenCustomizer;
+import com.ginkgooai.core.identity.security.GuestCodeGrantAuthenticationConverter;
+import com.ginkgooai.core.identity.security.GuestCodeGrantAuthenticationProvider;
+import com.ginkgooai.core.identity.service.GuestCodeService;
 import com.ginkgooai.core.identity.service.UserService;
+import com.nimbusds.jose.jwk.source.JWKSource;
+import com.nimbusds.jose.proc.SecurityContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -23,16 +28,17 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationConsentService;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService;
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.oidc.authentication.OidcUserInfoAuthenticationContext;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
-import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
-import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
+import org.springframework.security.oauth2.server.authorization.token.*;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
@@ -50,7 +56,7 @@ public class AuthorizationServerConfig {
 
     @Value("${app.auth-server-uri}")
     private String authServerUrl;
-   
+
     @Autowired
     private CustomLogoutSuccessHandler customLogoutSuccessHandler;
 
@@ -81,7 +87,10 @@ public class AuthorizationServerConfig {
 
     @Bean
     @Order(1)
-    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
+    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http,
+                                                                      OAuth2AuthorizationService authorizationService,
+                                                                      OAuth2TokenGenerator<?> tokenGenerator,
+                                                                      GuestCodeService guestCodeService)
             throws Exception {
         OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
                 OAuth2AuthorizationServerConfigurer.authorizationServer();
@@ -89,19 +98,28 @@ public class AuthorizationServerConfig {
                 .cors(Customizer.withDefaults())
                 .securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
                 .with(authorizationServerConfigurer, (authorizationServer) ->
-                        authorizationServer
+                                authorizationServer
 //                                .authorizationEndpoint(endpoint ->
 //                                        endpoint.consentPage("/oauth2/consent")
 //                                )
-                                .oidc(oidc -> oidc
-                                        .userInfoEndpoint(userInfo -> userInfo
-                                                .userInfoMapper(userInfoMapperWithCustomClaims())
+                                        .tokenEndpoint(tokenEndpoint ->
+                                                tokenEndpoint
+                                                        .accessTokenRequestConverter(
+                                                                new GuestCodeGrantAuthenticationConverter())
+                                                        .authenticationProvider(
+                                                                new GuestCodeGrantAuthenticationProvider(
+                                                                        authorizationService,
+                                                                        tokenGenerator,
+                                                                        guestCodeService)))
+                                        .oidc(oidc -> oidc
+                                                .userInfoEndpoint(userInfo -> userInfo
+                                                        .userInfoMapper(userInfoMapperWithCustomClaims())
+                                                )
+                                                .logoutEndpoint(logout -> logout
+                                                        .logoutResponseHandler(customLogoutSuccessHandler)
+                                                )
+                                                .clientRegistrationEndpoint(Customizer.withDefaults())
                                         )
-                                        .logoutEndpoint(logout -> logout
-                                                .logoutResponseHandler(customLogoutSuccessHandler)
-                                        )
-                                        .clientRegistrationEndpoint(Customizer.withDefaults())
-                                )
 
                 )
                 .authorizeHttpRequests((authorize) ->
@@ -110,14 +128,28 @@ public class AuthorizationServerConfig {
                 )
                 // Redirect to the OAuth 2.0 Login endpoint when not authenticated
                 .exceptionHandling((exceptions) -> exceptions
-                        .defaultAuthenticationEntryPointFor(
+                                .defaultAuthenticationEntryPointFor(
 //                                new LoginUrlAuthenticationEntryPoint("http://127.0.0.1:4000/login"),
-                                new LoginUrlAuthenticationEntryPoint("/login"),
-                                new MediaTypeRequestMatcher(MediaType.TEXT_HTML)
-                        )
+                                        new LoginUrlAuthenticationEntryPoint("/login"),
+                                        new MediaTypeRequestMatcher(MediaType.TEXT_HTML)
+                                )
                 );
 
         return http.build();
+    }
+
+    @Bean
+    OAuth2TokenGenerator<?> tokenGenerator(JWKSource<SecurityContext> jwkSource) {
+        JwtGenerator jwtGenerator = new JwtGenerator(new NimbusJwtEncoder(jwkSource));
+        OAuth2AccessTokenGenerator accessTokenGenerator = new OAuth2AccessTokenGenerator();
+        OAuth2RefreshTokenGenerator refreshTokenGenerator = new OAuth2RefreshTokenGenerator();
+        return new DelegatingOAuth2TokenGenerator(
+                jwtGenerator, accessTokenGenerator, refreshTokenGenerator);
+    }
+
+    @Bean
+    GuestCodeService guestCodeService() {
+        return new GuestCodeService();
     }
 
 

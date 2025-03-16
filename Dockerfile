@@ -1,4 +1,6 @@
 FROM maven:3.9-amazoncorretto-23 AS builder
+ARG GITHUB_USER
+ARG GITHUB_TOKEN
 
 WORKDIR /app
 COPY pom.xml ./

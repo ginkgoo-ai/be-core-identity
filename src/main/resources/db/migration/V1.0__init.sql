@@ -1,6 +1,6 @@
 -- V1__User_Auth_Schema.sql
 
-CREATE TABLE user_info (
+CREATE TABLE identity.user_info (
                            id VARCHAR(36) PRIMARY KEY,
                            email VARCHAR(255) NOT NULL,
                            password VARCHAR(255),
@@ -13,27 +13,27 @@ CREATE TABLE user_info (
                            updated_at TIMESTAMP(6)
 );
 
-CREATE UNIQUE INDEX idx_user_email ON user_info (email);
-CREATE INDEX idx_user_status ON user_info (status);
-CREATE INDEX idx_user_created_at ON user_info (created_at);
+CREATE UNIQUE INDEX idx_user_email ON identity.user_info (email);
+CREATE INDEX idx_user_status ON identity.user_info (status);
+CREATE INDEX idx_user_created_at ON identity.user_info (created_at);
 
-CREATE TABLE role (
+CREATE TABLE identity.role (
                       id VARCHAR(36) PRIMARY KEY,
                       name VARCHAR(50) NOT NULL
 );
 
-CREATE UNIQUE INDEX idx_role_name ON role (name);
+CREATE UNIQUE INDEX idx_role_name ON identity.role (name);
 
-CREATE TABLE user_role (
+CREATE TABLE identity.user_role (
                            user_id VARCHAR(36) NOT NULL,
                            role_id VARCHAR(36) NOT NULL,
                            PRIMARY KEY (user_id, role_id)
 );
 
-CREATE INDEX idx_user_role_user ON user_role (user_id);
-CREATE INDEX idx_user_role_role ON user_role (role_id);
+CREATE INDEX idx_user_role_user ON identity.user_role (user_id);
+CREATE INDEX idx_user_role_role ON identity.user_role (role_id);
 
-CREATE TABLE mfa_info (
+CREATE TABLE identity.mfa_info (
                           id VARCHAR(36) PRIMARY KEY,
                           user_id VARCHAR(36) NOT NULL,
                           type VARCHAR(20) CHECK (type IN ('NONE', 'TOTP', 'EMAIL', 'SMS')),
@@ -48,11 +48,11 @@ CREATE TABLE mfa_info (
                           updated_at TIMESTAMP(6)
 );
 
-CREATE UNIQUE INDEX idx_mfa_user_id ON mfa_info (user_id);
-CREATE INDEX idx_mfa_status ON mfa_info (status);
-CREATE INDEX idx_mfa_type ON mfa_info (type);
+CREATE UNIQUE INDEX idx_mfa_user_id ON identity.mfa_info (user_id);
+CREATE INDEX idx_mfa_status ON identity.mfa_info (status);
+CREATE INDEX idx_mfa_type ON identity.mfa_info (type);
 
-CREATE TABLE oauth2_client_registration (
+CREATE TABLE identity.oauth2_client_registration (
                                             registration_id VARCHAR(255) PRIMARY KEY,
                                             client_id VARCHAR(255) NOT NULL,
                                             client_secret VARCHAR(255),
@@ -75,11 +75,11 @@ CREATE TABLE oauth2_client_registration (
                                             updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_oauth2_client_registration_client_id ON oauth2_client_registration (client_id);
-CREATE INDEX idx_oauth2_client_registration_provider ON oauth2_client_registration (provider_type, status);
-CREATE INDEX idx_oauth2_client_registration_provider_active ON oauth2_client_registration (provider_type) WHERE status = 'ACTIVE';
+CREATE INDEX idx_oauth2_client_registration_client_id ON identity.oauth2_client_registration (client_id);
+CREATE INDEX idx_oauth2_client_registration_provider ON identity.oauth2_client_registration (provider_type, status);
+CREATE INDEX idx_oauth2_client_registration_provider_active ON identity.oauth2_client_registration (provider_type) WHERE status = 'ACTIVE';
 
-CREATE TABLE oauth2_registered_client (
+CREATE TABLE identity.oauth2_registered_client (
                                           id VARCHAR(255) PRIMARY KEY,
                                           client_id VARCHAR(255) NOT NULL,
                                           client_secret VARCHAR(255) NOT NULL,
@@ -98,9 +98,9 @@ CREATE TABLE oauth2_registered_client (
                                           last_modified_at TIMESTAMP WITH TIME ZONE
 );
 
-CREATE UNIQUE INDEX idx_oauth2_registered_client_client_id ON oauth2_registered_client (client_id);
+CREATE UNIQUE INDEX idx_oauth2_registered_client_client_id ON identity.oauth2_registered_client (client_id);
 
-CREATE TABLE oauth2_authorization (
+CREATE TABLE identity.oauth2_authorization (
                                       id VARCHAR(100) PRIMARY KEY,
                                       registered_client_id VARCHAR(100) NOT NULL,
                                       principal_name VARCHAR(200) NOT NULL,
@@ -146,20 +146,20 @@ CREATE TABLE oauth2_authorization (
                                       device_code_metadata TEXT
 );
 
-CREATE INDEX idx_oauth2_authorization_client_principal ON oauth2_authorization (registered_client_id, principal_name);
-CREATE INDEX idx_oauth2_authorization_principal ON oauth2_authorization (principal_name);
-CREATE INDEX idx_oauth2_authorization_state ON oauth2_authorization (state) WHERE state IS NOT NULL;
-CREATE INDEX idx_oauth2_authorization_access_token_expires ON oauth2_authorization (access_token_expires_at) WHERE access_token_expires_at IS NOT NULL;
-CREATE INDEX idx_oauth2_authorization_refresh_token_expires ON oauth2_authorization (refresh_token_expires_at) WHERE refresh_token_expires_at IS NOT NULL;
+CREATE INDEX idx_oauth2_authorization_client_principal ON identity.oauth2_authorization (registered_client_id, principal_name);
+CREATE INDEX idx_oauth2_authorization_principal ON identity.oauth2_authorization (principal_name);
+CREATE INDEX idx_oauth2_authorization_state ON identity.oauth2_authorization (state) WHERE state IS NOT NULL;
+CREATE INDEX idx_oauth2_authorization_access_token_expires ON identity.oauth2_authorization (access_token_expires_at) WHERE access_token_expires_at IS NOT NULL;
+CREATE INDEX idx_oauth2_authorization_refresh_token_expires ON identity.oauth2_authorization (refresh_token_expires_at) WHERE refresh_token_expires_at IS NOT NULL;
 
-CREATE TABLE oauth2_authorization_consent (
+CREATE TABLE identity.oauth2_authorization_consent (
                                               registered_client_id VARCHAR(100) NOT NULL,
                                               principal_name VARCHAR(200) NOT NULL,
                                               authorities VARCHAR(1000) NOT NULL,
                                               PRIMARY KEY (registered_client_id, principal_name)
 );
 
-CREATE TABLE user_social_connection (
+CREATE TABLE identity.user_social_connection (
                                         id VARCHAR(36) PRIMARY KEY,
                                         user_id VARCHAR(36) NOT NULL,
                                         provider_id VARCHAR(50) NOT NULL,
@@ -172,31 +172,15 @@ CREATE TABLE user_social_connection (
                                         updated_at TIMESTAMP(6)
 );
 
-CREATE UNIQUE INDEX idx_social_provider ON user_social_connection (provider_id, provider_user_id);
-CREATE INDEX idx_social_user ON user_social_connection (user_id);
-CREATE INDEX idx_social_token_expires ON user_social_connection (token_expires_at);
+CREATE UNIQUE INDEX idx_social_provider ON identity.user_social_connection (provider_id, provider_user_id);
+CREATE INDEX idx_social_user ON identity.user_social_connection (user_id);
+CREATE INDEX idx_social_token_expires ON identity.user_social_connection (token_expires_at);
 
-CREATE TABLE jwt_keys (
+CREATE TABLE identity.jwt_keys (
                           key_id VARCHAR(255) PRIMARY KEY,
                           private_key VARCHAR(4096),
                           public_key VARCHAR(4096),
                           created_at TIMESTAMP(6)
 );
 
-CREATE INDEX idx_jwt_keys_created_at ON jwt_keys (created_at);
-
-CREATE TABLE workspace (
-                           id VARCHAR(36) PRIMARY KEY,
-                           name VARCHAR(100) NOT NULL,
-                           description VARCHAR(500),
-                           logo_url VARCHAR(255),
-                           owner_id VARCHAR(36) NOT NULL,
-                           status VARCHAR(20) NOT NULL CHECK (status IN ('ACTIVE', 'INACTIVE', 'DELETED')),
-                           created_at TIMESTAMP(6) NOT NULL,
-                           updated_at TIMESTAMP(6)
-);
-
-CREATE INDEX idx_workspace_owner ON workspace (owner_id);
-CREATE INDEX idx_workspace_status ON workspace (status);
-CREATE INDEX idx_workspace_created_at ON workspace (created_at);
-CREATE INDEX idx_workspace_name ON workspace (name);
+CREATE INDEX idx_jwt_keys_created_at ON identity.jwt_keys (created_at);

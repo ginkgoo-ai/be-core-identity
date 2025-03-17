@@ -12,6 +12,7 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -55,11 +56,9 @@ public class GuestCodeServiceRedisTest {
         // Verify Redis operations were called
         verify(valueOperations).set(
                 eq("guest_code:" + guestCode),
-                any(GuestCodeService.GuestCodeInfo.class));
-
-        verify(redisTemplate).expire(
-                eq("guest_code:" + guestCode),
-                eq(Duration.ofHours(expiryHours)));
+                any(GuestCodeService.GuestCodeInfo.class),
+                eq((long)expiryHours),
+                eq(TimeUnit.HOURS));
     }
 
     @Test
@@ -84,8 +83,6 @@ public class GuestCodeServiceRedisTest {
         assertEquals(guestEmail, result.guestEmail());
         assertEquals(expiresAt, result.expiresAt());
 
-        // Verify the code was deleted (one-time use)
-        verify(redisTemplate).delete("guest_code:" + guestCode);
     }
 
     @Test

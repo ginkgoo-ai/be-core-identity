@@ -137,10 +137,16 @@ public class AuthorizationServerConfig {
     }
 
     @Bean
-    OAuth2TokenGenerator<?> tokenGenerator(JWKSource<SecurityContext> jwkSource) {
+    OAuth2TokenGenerator<?> tokenGenerator(
+            JWKSource<SecurityContext> jwkSource,
+            OAuth2TokenCustomizer<JwtEncodingContext> tokenCustomizer) {
+
         JwtGenerator jwtGenerator = new JwtGenerator(new NimbusJwtEncoder(jwkSource));
+        jwtGenerator.setJwtCustomizer(tokenCustomizer);
+
         OAuth2AccessTokenGenerator accessTokenGenerator = new OAuth2AccessTokenGenerator();
         OAuth2RefreshTokenGenerator refreshTokenGenerator = new OAuth2RefreshTokenGenerator();
+
         return new DelegatingOAuth2TokenGenerator(
                 jwtGenerator, accessTokenGenerator, refreshTokenGenerator);
     }

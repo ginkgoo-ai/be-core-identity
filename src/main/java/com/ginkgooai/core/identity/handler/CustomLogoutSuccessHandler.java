@@ -1,7 +1,6 @@
 package com.ginkgooai.core.identity.handler;
 
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -9,6 +8,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
+import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService;
+import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
+import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.security.oauth2.server.authorization.oidc.authentication.OidcLogoutAuthenticationToken;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -22,21 +25,37 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class CustomLogoutSuccessHandler implements AuthenticationSuccessHandler {
 
+    private final JdbcOAuth2AuthorizationService authorizationService;
+
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
-        
+
         if (authentication instanceof OidcLogoutAuthenticationToken logoutToken) {
             try {
-                HttpSession session = request.getSession(false);
-                if (session != null) {
-                    session.invalidate();
+                OAuth2Authorization authorization = authorizationService
+                        .findByToken(logoutToken.getIdToken().getTokenValue(), new OAuth2TokenType(OidcParameterNames.ID_TOKEN));
+
+                if (authorization != null) {
+                    authorizationService.remove(authorization);
                 }
 
-                SecurityContextHolder.clearContext();
+                String domain = request.getServerName();
+                String[] cookiesToClear = {"JSESSIONID", "SESSION", "XSRF-TOKEN", "remember-me"};
 
-                clearCookies(request, response);
+                for (String cookieName : cookiesToClear) {
+                    response.addHeader("Set-Cookie",
+                            String.format("%s=; Path=/; Domain=%s; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax",
+                                    cookieName, domain));
+                }
+
+                HttpSession session = request.getSession(false);
+                if (session != null) {
+                    log.debug("Invalidating session: {}", session.getId());
+                    session.invalidate();
+                }
+                SecurityContextHolder.clearContext();
 
                 String postLogoutRedirectUri = logoutToken.getPostLogoutRedirectUri();
                 if (!ObjectUtils.isEmpty(postLogoutRedirectUri)) {
@@ -44,6 +63,7 @@ public class CustomLogoutSuccessHandler implements AuthenticationSuccessHandler 
                     if (!ObjectUtils.isEmpty(logoutToken.getState())) {
                         builder.queryParam("state", logoutToken.getState());
                     }
+                    log.debug("Redirecting to: {}", builder.build().toUriString());
                     response.sendRedirect(builder.build().toUriString());
                 } else {
                     response.setStatus(HttpServletResponse.SC_OK);
@@ -51,21 +71,6 @@ public class CustomLogoutSuccessHandler implements AuthenticationSuccessHandler 
             } catch (Exception e) {
                 log.error("Error during logout process", e);
                 response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            }
-        }
-    }
-
-    private void clearCookies(HttpServletRequest request, HttpServletResponse response) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if (cookie.getName().startsWith("JSESSIONID") ||
-                        cookie.getName().startsWith("SESSION")) {
-                    cookie.setValue("");
-                    cookie.setPath("/");
-                    cookie.setMaxAge(0);
-                    response.addCookie(cookie);
-                }
             }
         }
     }

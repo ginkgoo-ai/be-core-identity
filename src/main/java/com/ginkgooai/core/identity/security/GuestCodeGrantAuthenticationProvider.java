@@ -75,7 +75,6 @@ public class GuestCodeGrantAuthenticationProvider implements AuthenticationProvi
                 .tokenType(OAuth2TokenType.ACCESS_TOKEN)
                 .authorizationGrantType(guestCodeAuthentication.getGrantType())
                 .authorizationGrant(guestCodeAuthentication)
-                // 将额外的参数添加到上下文中
                 .put("resource_id", resourceId)
                 .put("resource_owner", codeInfo.ownerEmail())
                 .put("guest_email", codeInfo.guestEmail())

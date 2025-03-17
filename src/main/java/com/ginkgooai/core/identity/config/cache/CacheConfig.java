@@ -8,18 +8,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
-import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
 
 import java.time.Duration;
 
 @Configuration
 @EnableCaching
 @RequiredArgsConstructor
-@EnableRedisHttpSession
 public class CacheConfig {
     private final RedisConnectionFactory connectionFactory;
 
@@ -44,9 +41,4 @@ public class CacheConfig {
             )
             .disableCachingNullValues();
     }
-
-//    @Bean
-//    public RedisConnectionFactory redisConnectionFactory() {
-//        return new LettuceConnectionFactory();
-//    }
 }

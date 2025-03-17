@@ -1,5 +1,6 @@
 package com.ginkgooai.core.identity.service;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -7,10 +8,10 @@ import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class GuestCodeService {
@@ -41,9 +42,8 @@ public class GuestCodeService {
         
         // Store in Redis with expiration
         String redisKey = REDIS_KEY_PREFIX + guestCode;
-        redisTemplate.opsForValue().set(redisKey, codeInfo);
-        redisTemplate.expire(redisKey, Duration.ofHours(expiryHours));
-        
+        redisTemplate.opsForValue().set(redisKey, codeInfo, expiryHours, TimeUnit.HOURS);
+
         return guestCode;
     }
 
@@ -85,15 +85,13 @@ public class GuestCodeService {
                     new OAuth2Error("invalid_grant", "Guest code has expired", null));
         }
         
-        // Delete the code after successful validation (one-time use)
-        redisTemplate.delete(redisKey);
-        
         return codeInfo;
     }
 
     /**
      * Guest code information record.
      */
+    @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
     public record GuestCodeInfo(
             String resourceId,
             String ownerEmail,

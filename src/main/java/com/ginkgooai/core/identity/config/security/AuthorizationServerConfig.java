@@ -57,9 +57,6 @@ public class AuthorizationServerConfig {
     @Value("${app.auth-server-uri}")
     private String authServerUrl;
 
-    @Autowired
-    private CustomLogoutSuccessHandler customLogoutSuccessHandler;
-
     @Bean
     public AuthorizationServerSettings authorizationServerSettings() {
         return AuthorizationServerSettings.builder()
@@ -90,7 +87,8 @@ public class AuthorizationServerConfig {
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http,
                                                                       OAuth2AuthorizationService authorizationService,
                                                                       OAuth2TokenGenerator<?> tokenGenerator,
-                                                                      GuestCodeService guestCodeService)
+                                                                      GuestCodeService guestCodeService,
+                                                                      CustomLogoutSuccessHandler customLogoutSuccessHandler)
             throws Exception {
         OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
                 OAuth2AuthorizationServerConfigurer.authorizationServer();

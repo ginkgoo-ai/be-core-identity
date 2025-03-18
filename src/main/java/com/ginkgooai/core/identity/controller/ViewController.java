@@ -32,7 +32,7 @@ import java.util.Set;
 @Hidden
 public class ViewController {
 
-    @Value("${core-gateway-uri}")
+    @Value("${AUTH_CLIENT}")
     private String coreGatewayUri;
 
     @Autowired

@@ -1,6 +1,3 @@
-core-identity-uri: ${SERVICE_SCHEME}://${CORE_IDENTITY_HOST}:${CORE_IDENTITY_PORT}
-core-gateway-uri: ${SERVICE_SCHEME}://${CORE_GATEWAY_HOST}:${CORE_GATEWAY_PORT}
-
 server:
   port: ${CORE_IDENTITY_PORT}
   shutdown: graceful
@@ -59,7 +56,7 @@ spring:
           starttls:
             enable: true
     from: ${MAIL_FROM}
-    app-url: ${core-identity-uri}
+    app-url: ${AUTH_SERVER}
 
 
 management:

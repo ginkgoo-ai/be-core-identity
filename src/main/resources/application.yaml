@@ -1,6 +1,5 @@
 core-identity-uri: ${SERVICE_SCHEME}://${CORE_IDENTITY_HOST}:${CORE_IDENTITY_PORT}
 core-gateway-uri: ${SERVICE_SCHEME}://${CORE_GATEWAY_HOST}:${CORE_GATEWAY_PORT}
-core-gateway-public-uri: ${APP_SCHEME}://${CORE_GATEWAY_PUBLIC_HOST}:${CORE_GATEWAY_PUBLIC_PORT}
 
 server:
   port: ${CORE_IDENTITY_PORT}

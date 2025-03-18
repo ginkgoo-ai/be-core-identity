@@ -28,6 +28,11 @@ public final class FederatedIdentityIdTokenCustomizer implements OAuth2TokenCust
 
 	@Override
 	public void customize(JwtEncodingContext context) {
+		// guest_code grant type does not have principal
+		if (context.getAuthorizationGrantType().getValue().equals("urn:ietf:params:oauth:grant-type:guest_code")) {
+			return;
+		}
+		
 		// Only process ID Token and Access Token
 		if (OidcParameterNames.ID_TOKEN.equals(context.getTokenType().getValue()) ||
 				OAuth2TokenType.ACCESS_TOKEN.getValue().equals(context.getTokenType().getValue())) {

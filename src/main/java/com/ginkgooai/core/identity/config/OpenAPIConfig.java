@@ -15,7 +15,7 @@ import java.util.List;
 @Configuration
 public class OpenAPIConfig {
 
-    @Value("${core-gateway-public-uri}")
+    @Value("${AUTH_CLIENT}")
     private String gatewayUri;
 
     private static final String COOKIE_AUTH_NAME = "cookieAuth";

@@ -1,6 +1,5 @@
 core-identity-uri: http://127.0.0.1:9000
 core-gateway-uri: http://127.0.0.1:8080
-core-gateway-public-uri: http://127.0.0.1:8080
 
 server:
   port: 9000 

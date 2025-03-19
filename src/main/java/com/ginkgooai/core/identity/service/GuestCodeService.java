@@ -23,14 +23,15 @@ public class GuestCodeService {
     
     /**
      * Generates a guest code for accessing a specific resource.
-     * 
+     *
+     * @param resource The Type of the resource to be accessed
      * @param resourceId The ID of the resource to be accessed
-     * @param ownerEmail The email of the resource owner
+     * @param write Whether the guest has write access
      * @param guestEmail The email of the guest who will access the resource
      * @param expiryHours Number of hours until the code expires
      * @return The generated guest code
      */
-    public String generateGuestCode(String resourceId, String ownerEmail, String guestEmail, int expiryHours) {
+    public String generateGuestCode(String resource, String resourceId, boolean write, String guestName, String guestEmail, String redirectUrl, int expiryHours) {
         // Generate a random code
         String guestCode = UUID.randomUUID().toString();
         
@@ -38,7 +39,7 @@ public class GuestCodeService {
         Instant expiresAt = Instant.now().plus(expiryHours, ChronoUnit.HOURS);
         
         // Create guest code info
-        GuestCodeInfo codeInfo = new GuestCodeInfo(resourceId, ownerEmail, guestEmail, expiresAt);
+        GuestCodeInfo codeInfo = new GuestCodeInfo(resource, resourceId, write, guestName, guestEmail, redirectUrl, expiresAt);
         
         // Store in Redis with expiration
         String redisKey = REDIS_KEY_PREFIX + guestCode;
@@ -93,9 +94,12 @@ public class GuestCodeService {
      */
     @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
     public record GuestCodeInfo(
+            String resource,
             String resourceId,
-            String ownerEmail,
+            boolean write,
+            String guestName,
             String guestEmail,
+            String redirectUrl,
             Instant expiresAt
     ) {}
 }

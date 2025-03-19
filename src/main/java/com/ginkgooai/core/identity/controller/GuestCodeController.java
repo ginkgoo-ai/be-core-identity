@@ -19,16 +19,19 @@ public class GuestCodeController {
     @PostMapping
     @PreAuthorize("hasAuthority('SCOPE_guest_code.create')")
     public ResponseEntity<GuestCodeResponse> generateGuestCode(@RequestBody GuestCodeRequest request) {
-        if (request.resourceId() == null || request.ownerEmail() == null || request.guestEmail() == null) {
+        if (request.resource() == null || request.resourceId() == null || request.guestEmail() == null) {
             return ResponseEntity.badRequest().build();
         }
 
         int expiryHours = request.expiryHours() > 0 ? request.expiryHours() : 24;
 
         String guestCode = guestCodeService.generateGuestCode(
+                request.resource(),
                 request.resourceId(),
-                request.ownerEmail(),
+                request.write(),
+                request.guestName(),
                 request.guestEmail(),
+                request.redirectUrl(),
                 expiryHours
         );
 
@@ -47,37 +50,43 @@ public class GuestCodeController {
     public ResponseEntity<?> validateGuestCode(
             @RequestParam("code") String guestCode,
             @RequestParam("resource_id") String resourceId) {
-        
+
         try {
-            GuestCodeService.GuestCodeInfo codeInfo = 
-                guestCodeService.validateGuestCode(guestCode, resourceId);
-            
+            GuestCodeService.GuestCodeInfo codeInfo =
+                    guestCodeService.validateGuestCode(guestCode, resourceId);
+
             return ResponseEntity.ok(Map.of(
-                "valid", true,
-                "resourceId", codeInfo.resourceId(),
-                "ownerEmail", codeInfo.ownerEmail(),
-                "guestEmail", codeInfo.guestEmail(),
-                "expiresAt", codeInfo.expiresAt().toString()
+                    "valid", true,
+                    "resource", codeInfo.resource(),
+                    "resourceId", codeInfo.resourceId(),
+                    "write", codeInfo.write(),
+                    "guestEmail", codeInfo.guestEmail(),
+                    "expiresAt", codeInfo.expiresAt().toString()
             ));
         } catch (Exception e) {
             return ResponseEntity.ok(Map.of(
-                "valid", false,
-                "error", e.getMessage()
+                    "valid", false,
+                    "error", e.getMessage()
             ));
         }
     }
 
     public record GuestCodeRequest(
+            String resource,
             String resourceId,
-            String ownerEmail,
+            boolean write,
+            String guestName,
             String guestEmail,
+            String redirectUrl,
             int expiryHours
-    ) {}
+    ) {
+    }
 
     public record GuestCodeResponse(
             String guestCode,
             String resourceId,
             String expiresAt,
             int expiryHours
-    ) {}
+    ) {
+    }
 }

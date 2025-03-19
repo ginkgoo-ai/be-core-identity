@@ -1,5 +1,6 @@
 package com.ginkgooai.core.identity;
 
+import com.ginkgooai.core.common.security.CustomGrantTypes;
 import com.ginkgooai.core.identity.service.GuestCodeService;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -49,7 +50,7 @@ public class TestSecurityConfiguration {
                 .clientSecret("{noop}sharing-service-secret")
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
-                .authorizationGrantType(new AuthorizationGrantType("urn:ietf:params:oauth:grant-type:guest_code"))
+                .authorizationGrantType(CustomGrantTypes.GUEST_CODE)
                 .scope("guest_code.create")
                 .scope("guest_code.validate")
                 .build();

@@ -1,5 +1,6 @@
 package com.ginkgooai.core.identity.security;
 
+import com.ginkgooai.core.common.security.CustomGrantTypes;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.lang.Nullable;
 import org.springframework.security.core.Authentication;
@@ -12,12 +13,13 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 public class GuestCodeGrantAuthenticationConverter implements AuthenticationConverter {
 
-    private static final String GRANT_TYPE_GUEST_CODE = "urn:ietf:params:oauth:grant-type:guest_code";
+    private static final String GRANT_TYPE_GUEST_CODE = CustomGrantTypes.GUEST_CODE.getValue(); 
     private static final String GUEST_CODE_PARAMETER = "guest_code";
     private static final String RESOURCE_ID_PARAMETER = "resource_id";
 
@@ -58,6 +60,11 @@ public class GuestCodeGrantAuthenticationConverter implements AuthenticationConv
                 clientPrincipal, 
                 additionalParameters
         );
+    }
+    
+    //set authorities
+    public void setAuthorities() {
+        
     }
 
     private static MultiValueMap<String, String> getParameters(HttpServletRequest request) {

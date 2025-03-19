@@ -29,9 +29,11 @@ public class GuestCodeServiceRedisTest {
     @InjectMocks
     private GuestCodeService guestCodeService;
 
+    private final String resource = "shortlist";
     private final String resourceId = "resource-123";
-    private final String ownerEmail = "owner@example.com";
+    private final String guestName = "guest";
     private final String guestEmail = "guest@example.com";
+    private final String redirectUrl = "redirect-url";
     private final int expiryHours = 24;
 
     @BeforeEach
@@ -46,8 +48,7 @@ public class GuestCodeServiceRedisTest {
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
 
         // Execute the method
-        String guestCode = guestCodeService.generateGuestCode(
-                resourceId, ownerEmail, guestEmail, expiryHours);
+        String guestCode = guestCodeService.generateGuestCode(resource, resourceId, true, guestName, guestEmail, redirectUrl, expiryHours);
 
         // Verify the code is not empty
         assertNotNull(guestCode);
@@ -67,8 +68,7 @@ public class GuestCodeServiceRedisTest {
         String guestCode = "valid-guest-code";
         Instant expiresAt = Instant.now().plus(1, ChronoUnit.HOURS);
 
-        GuestCodeService.GuestCodeInfo codeInfo = new GuestCodeService.GuestCodeInfo(
-                resourceId, ownerEmail, guestEmail, expiresAt);
+        GuestCodeService.GuestCodeInfo codeInfo = new GuestCodeService.GuestCodeInfo(resource, resourceId, true, guestName, guestEmail, redirectUrl, expiresAt);
 
         // Setup Redis mock
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
@@ -79,7 +79,6 @@ public class GuestCodeServiceRedisTest {
 
         // Verify the result
         assertEquals(resourceId, result.resourceId());
-        assertEquals(ownerEmail, result.ownerEmail());
         assertEquals(guestEmail, result.guestEmail());
         assertEquals(expiresAt, result.expiresAt());
 
@@ -108,8 +107,7 @@ public class GuestCodeServiceRedisTest {
         String wrongResourceId = "wrong-resource";
         Instant expiresAt = Instant.now().plus(1, ChronoUnit.HOURS);
 
-        GuestCodeService.GuestCodeInfo codeInfo = new GuestCodeService.GuestCodeInfo(
-                resourceId, ownerEmail, guestEmail, expiresAt);
+        GuestCodeService.GuestCodeInfo codeInfo = new GuestCodeService.GuestCodeInfo(resource, resourceId, true, guestName, guestEmail, redirectUrl, expiresAt);
 
         // Setup Redis mock
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
@@ -131,8 +129,7 @@ public class GuestCodeServiceRedisTest {
         String guestCode = "expired-guest-code";
         Instant expiresAt = Instant.now().minus(1, ChronoUnit.HOURS);
 
-        GuestCodeService.GuestCodeInfo codeInfo = new GuestCodeService.GuestCodeInfo(
-                resourceId, ownerEmail, guestEmail, expiresAt);
+        GuestCodeService.GuestCodeInfo codeInfo = new GuestCodeService.GuestCodeInfo(resource, resourceId, true, guestName, guestEmail, redirectUrl, expiresAt);
 
         // Setup Redis mock
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);

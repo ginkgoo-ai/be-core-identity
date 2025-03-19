@@ -25,10 +25,13 @@ public class GuestCodeControllerTest {
     
     @InjectMocks
     private GuestCodeController controller;
-    
+
+    private final String resource = "shortlist";
     private final String resourceId = "resource-123";
-    private final String ownerEmail = "owner@example.com";
+    private final boolean write = true;
+    private final String guestName = "guest";
     private final String guestEmail = "guest@example.com";
+    private final String redirectUrl = "redirect-url";
     private final int expiryHours = 24;
 
     @BeforeEach
@@ -39,10 +42,10 @@ public class GuestCodeControllerTest {
     @Test
     public void testGenerateGuestCode_Success() {
         GuestCodeController.GuestCodeRequest request = new GuestCodeController.GuestCodeRequest(
-                resourceId, ownerEmail, guestEmail, expiryHours);
+                resource, resourceId, true, guestName, guestEmail, redirectUrl, expiryHours);
         
         String guestCode = "generated-guest-code";
-        when(guestCodeService.generateGuestCode(resourceId, ownerEmail, guestEmail, expiryHours))
+        when(guestCodeService.generateGuestCode(resource, resourceId, true, guestName, guestEmail, redirectUrl, expiryHours))
                 .thenReturn(guestCode);
         
         ResponseEntity<GuestCodeController.GuestCodeResponse> response = 
@@ -63,7 +66,7 @@ public class GuestCodeControllerTest {
     public void testGenerateGuestCode_MissingParameters() {
         GuestCodeController.GuestCodeRequest requestWithoutResourceId = 
                 new GuestCodeController.GuestCodeRequest(
-                        null, ownerEmail, guestEmail, expiryHours);
+                        null, null, true, null, null, redirectUrl, expiryHours);
         
         ResponseEntity<GuestCodeController.GuestCodeResponse> response = 
                 controller.generateGuestCode(requestWithoutResourceId);
@@ -72,16 +75,16 @@ public class GuestCodeControllerTest {
         assertNull(response.getBody());
         
         verify(guestCodeService, never()).generateGuestCode(
-                any(), any(), any(), anyInt());
+                any(), any(), anyBoolean(), any(), any(), any(), anyInt());
     }
 
     @Test
     public void testGenerateGuestCode_DefaultExpiryHours() {
         GuestCodeController.GuestCodeRequest request = new GuestCodeController.GuestCodeRequest(
-                resourceId, ownerEmail, guestEmail, 0);
+                resource, resourceId, true, guestName, guestEmail, redirectUrl, 0);
         
         String guestCode = "generated-guest-code";
-        when(guestCodeService.generateGuestCode(resourceId, ownerEmail, guestEmail, 24))
+        when(guestCodeService.generateGuestCode(resource, resourceId, true, guestName, guestEmail, redirectUrl, 24))
                 .thenReturn(guestCode);
         
         ResponseEntity<GuestCodeController.GuestCodeResponse> response = 
@@ -91,7 +94,7 @@ public class GuestCodeControllerTest {
         assertNotNull(response.getBody());
         assertEquals(24, response.getBody().expiryHours());
         
-        verify(guestCodeService).generateGuestCode(resourceId, ownerEmail, guestEmail, 24);
+        verify(guestCodeService).generateGuestCode(resource, resourceId, true, guestName, guestEmail, redirectUrl, 24);
     }
 
     @Test
@@ -100,7 +103,7 @@ public class GuestCodeControllerTest {
         Instant expiresAt = Instant.now().plus(24, ChronoUnit.HOURS);
         
         // 
-        GuestCodeService.GuestCodeInfo codeInfo = new GuestCodeService.GuestCodeInfo (resourceId, ownerEmail, guestEmail, expiresAt);
+        GuestCodeService.GuestCodeInfo codeInfo = new GuestCodeService.GuestCodeInfo(resource, resourceId, true, guestName, guestEmail, redirectUrl, expiresAt);
         when(guestCodeService.validateGuestCode(guestCode, resourceId))
                 .thenReturn(codeInfo);
 
@@ -113,9 +116,10 @@ public class GuestCodeControllerTest {
         Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
 
         assertTrue((Boolean) responseBody.get("valid"));
+        assertEquals(resource, responseBody.get("resource"));
         assertEquals(resourceId, responseBody.get("resourceId"));
-        assertEquals(ownerEmail, responseBody.get("ownerEmail"));
         assertEquals(guestEmail, responseBody.get("guestEmail"));
+        assertEquals(write, responseBody.get("write"));
         assertEquals(expiresAt.toString(), responseBody.get("expiresAt"));
     }
 

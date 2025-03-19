@@ -151,12 +151,6 @@ public class AuthorizationServerConfig {
                 jwtGenerator, accessTokenGenerator, refreshTokenGenerator);
     }
 
-    @Bean
-    GuestCodeService guestCodeService() {
-        return new GuestCodeService();
-    }
-
-
     public Function<OidcUserInfoAuthenticationContext, OidcUserInfo> userInfoMapperWithCustomClaims() {
         return context -> {
             OAuth2Authorization authorization = context.getAuthorization();

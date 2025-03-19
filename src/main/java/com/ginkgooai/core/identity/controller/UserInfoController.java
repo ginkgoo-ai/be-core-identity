@@ -1,5 +1,6 @@
 package com.ginkgooai.core.identity.controller;
 
+import com.ginkgooai.core.identity.domain.Role;
 import com.ginkgooai.core.identity.domain.UserInfo;
 import com.ginkgooai.core.identity.dto.request.*;
 import com.ginkgooai.core.identity.dto.response.UserResponse;
@@ -28,6 +29,8 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.*;
+
 @Slf4j
 @Validated
 @RestController
@@ -42,7 +45,21 @@ public class UserInfoController {
     @Operation(summary = "Get user info", description = "MVP:Retrieve information about the currently authenticated user")
     public ResponseEntity<UserResponse> getUserInfo(@AuthenticationPrincipal Jwt jwt) {
         log.debug("Retrieving info for user: {}", jwt.getSubject());
-        UserInfo userInfo = userService.getUserById(jwt.getSubject());
+        UserInfo userInfo;
+        if (Objects.equals(jwt.getClaim("role"), Role.ROLE_GUEST)) {
+            Set<Role> roles = new HashSet<>();
+            roles.add(new Role(UUID.randomUUID().toString(), Role.ROLE_GUEST));
+            userInfo = UserInfo.builder()
+                    .id(jwt.getClaim("sub"))
+                    .email(jwt.getClaim("email"))
+                    .socialConnections(Collections.emptySet())
+                    .name(jwt.getClaim("name"))
+                    .picture("") //todo: set a default guest picture
+                    .roles(roles)
+                    .build();
+        } else {
+            userInfo = userService.getUserById(jwt.getSubject());
+        }
         return ResponseEntity.ok(UserResponse.from(userInfo));
     }
 

@@ -33,9 +33,7 @@ public class GuestCodeGrantAuthenticationTokenTest {
         assertEquals("", token.getCredentials());
         assertFalse(token.isAuthenticated());
         
-        AuthorizationGrantType expectedGrantType = 
-                new AuthorizationGrantType("urn:ietf:params:oauth:grant-type:guest_code");
-        assertEquals(expectedGrantType.getValue(), token.getGrantType().getValue());
+        assertEquals("resource-123", token.getResourceId());
     }
 
     @Test

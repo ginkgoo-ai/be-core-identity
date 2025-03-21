@@ -12,12 +12,14 @@ import com.ginkgooai.core.identity.repository.RoleRepository;
 import com.ginkgooai.core.identity.repository.UserRepository;
 import com.ginkgooai.core.identity.service.verification.EmailVerificationStrategy;
 import com.ginkgooai.core.identity.service.verification.EmailVerificationStrategyFactory;
+import com.ginkgooai.core.identity.specification.UserSpecification;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.savedrequest.DefaultSavedRequest;
 import org.springframework.stereotype.Service;
@@ -26,7 +28,9 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -276,4 +280,23 @@ public class UserService {
         }
         return currentValue;
     }
+
+    /**
+     * Find user by dynamic criteria using JPA Specification
+     * @param email Query specification
+     * @return Matched user entity
+     * @throws ResourceNotFoundException when no user found
+     */
+    public UserInfo getUserBySpecification(String email, String name) {
+        Specification<UserInfo> spec = Specification.where(UserSpecification.findByEmail(email));
+
+        // Apply name filter if provided and not empty
+        if (name != null && !name.trim().isEmpty()) {
+            spec = spec.and(UserSpecification.hasNameLike(name.trim()));
+        }
+
+        return userRepository.findOne(spec)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "criteria", ""));
+    }
+
 }

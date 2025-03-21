@@ -222,4 +222,28 @@ public class UserInfoController {
         log.info("Patch user info for user ID: {}", userId);
         return ResponseEntity.ok().build();
     }
+
+
+    /**
+     * GET /users : Search users with dynamic filters
+     *
+     * @param email Exact match for email
+     * @param name  Partial match for name
+     * @return UserResponse with matched user
+     */
+    @GetMapping("/user")
+    @Operation(summary = "Search users", description = "Search users with multiple filter criteria")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "User found"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    @Hidden
+    public ResponseEntity<UserResponse> searchUsers(
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String name) {
+
+        UserInfo userInfo = userService.getUserBySpecification(email, name);
+        return ResponseEntity.ok(UserResponse.from(userInfo));
+    }
+
 }

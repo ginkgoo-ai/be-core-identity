@@ -16,15 +16,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
-import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
-import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -70,6 +68,21 @@ public class UserInfoController {
         log.debug("Retrieving info for user: {}", userId);
         UserInfo userInfo = userService.getUserById(userId);
         return ResponseEntity.ok(UserResponse.from(userInfo));
+    }
+
+    @GetMapping("")
+    @Operation(summary = "Get users info by ids",
+            description = "Retrieve information about multiple users by their IDs")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved user information"),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+    })
+    public ResponseEntity<List<UserResponse>> getUsersByIds(
+            @RequestParam("ids") @Size(min = 1, max = 100) List<String> userIds) {
+        log.debug("Retrieving info for users: {}", userIds);
+        List<UserResponse> users = userService.getUsersByIds(userIds);
+        return ResponseEntity.ok(users);
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -204,7 +217,7 @@ public class UserInfoController {
             PatchUserRequest request) {
         log.debug("Patch user info for user ID: {}", userId);
 
-        userService.patchUserInfo(userId, request.getFileId(), request.getName());
+        userService.patchUserInfo(userId, request.getPictureUrl(), request.getName());
 
         log.info("Patch user info for user ID: {}", userId);
         return ResponseEntity.ok().build();

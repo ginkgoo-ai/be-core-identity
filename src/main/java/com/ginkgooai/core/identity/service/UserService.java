@@ -27,6 +27,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -126,6 +128,14 @@ public class UserService {
         log.debug("Retrieving user by ID: {}", userId);
         return userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "ID", userId));
+    }
+
+    public List<UserResponse> getUsersByIds(List<String> userIds) {
+        log.debug("Retrieving users by IDs: {}", userIds);
+        List<UserInfo> users = userRepository.findAllById(userIds);
+        return users.stream()
+                .map(UserResponse::from)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -244,7 +254,7 @@ public class UserService {
     }
 
     @Transactional
-    public void patchUserInfo(@NotBlank String userId, String fileId, String name) {
+    public void patchUserInfo(@NotBlank String userId, String pictureUrl, String name) {
 
         UserInfo user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
@@ -252,7 +262,7 @@ public class UserService {
 
         UserInfo updatedUser = UserInfo.builder()
                 .id(userId)
-                .picture(processField(fileId, user.getPicture()))
+                .picture(pictureUrl)
                 .name(name)
                 .build();
 

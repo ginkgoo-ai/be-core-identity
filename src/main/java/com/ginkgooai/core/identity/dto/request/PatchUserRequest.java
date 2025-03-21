@@ -1,6 +1,7 @@
 package com.ginkgooai.core.identity.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 /**
@@ -13,19 +14,20 @@ import lombok.Data;
 public class PatchUserRequest {
 
     @Schema(
-            title = "File Id",
-            description = "User's photo id",
-            example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
+            title = "Picture url",
+            description = "User's picture id",
+            example = "https://example.com/picture.jpg",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED
     )
-    private String fileId;
+    private String pictureUrl;
 
     @Schema(
             title = "Name",
             description = "User's name",
             example = "John",
-            requiredMode = Schema.RequiredMode.NOT_REQUIRED
+            requiredMode = Schema.RequiredMode.REQUIRED
     )
+    @NotBlank(message = "Name is required")
     private String name;
 
 }

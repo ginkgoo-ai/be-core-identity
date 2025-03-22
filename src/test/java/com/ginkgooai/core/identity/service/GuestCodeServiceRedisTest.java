@@ -1,22 +1,26 @@
 package com.ginkgooai.core.identity.service;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
-import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-
-import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.MockitoAnnotations;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 
 public class GuestCodeServiceRedisTest {
 
@@ -35,6 +39,7 @@ public class GuestCodeServiceRedisTest {
     private final String guestEmail = "guest@example.com";
     private final String redirectUrl = "redirect-url";
     private final int expiryHours = 24;
+    private final String workspaceId = "workspace-456";
 
     @BeforeEach
     public void setup() {
@@ -48,7 +53,8 @@ public class GuestCodeServiceRedisTest {
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
 
         // Execute the method
-        String guestCode = guestCodeService.generateGuestCode(resource, resourceId, true, guestName, guestEmail, redirectUrl, expiryHours);
+        String guestCode = guestCodeService.generateGuestCode(resource, resourceId, true, guestName, guestEmail,
+                redirectUrl, expiryHours, workspaceId);
 
         // Verify the code is not empty
         assertNotNull(guestCode);
@@ -58,7 +64,28 @@ public class GuestCodeServiceRedisTest {
         verify(valueOperations).set(
                 eq("guest_code:" + guestCode),
                 any(GuestCodeService.GuestCodeInfo.class),
-                eq((long)expiryHours),
+                eq((long) expiryHours),
+                eq(TimeUnit.HOURS));
+    }
+
+    @Test
+    public void testGenerateGuestCode_BackwardCompatibility() {
+        // 在这个测试中设置需要的存根
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+
+        // Execute the method without workspaceId
+        String guestCode = guestCodeService.generateGuestCode(resource, resourceId, true, guestName, guestEmail,
+                redirectUrl, expiryHours);
+
+        // Verify the code is not empty
+        assertNotNull(guestCode);
+        assertTrue(guestCode.length() > 0);
+
+        // Verify Redis operations were called
+        verify(valueOperations).set(
+                eq("guest_code:" + guestCode),
+                any(GuestCodeService.GuestCodeInfo.class),
+                eq((long) expiryHours),
                 eq(TimeUnit.HOURS));
     }
 
@@ -68,7 +95,8 @@ public class GuestCodeServiceRedisTest {
         String guestCode = "valid-guest-code";
         Instant expiresAt = Instant.now().plus(1, ChronoUnit.HOURS);
 
-        GuestCodeService.GuestCodeInfo codeInfo = new GuestCodeService.GuestCodeInfo(resource, resourceId, true, guestName, guestEmail, redirectUrl, expiresAt);
+        GuestCodeService.GuestCodeInfo codeInfo = new GuestCodeService.GuestCodeInfo(resource, resourceId, true,
+                guestName, guestEmail, redirectUrl, expiresAt, workspaceId);
 
         // Setup Redis mock
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
@@ -81,7 +109,7 @@ public class GuestCodeServiceRedisTest {
         assertEquals(resourceId, result.resourceId());
         assertEquals(guestEmail, result.guestEmail());
         assertEquals(expiresAt, result.expiresAt());
-
+        assertEquals(workspaceId, result.workspaceId());
     }
 
     @Test
@@ -93,8 +121,7 @@ public class GuestCodeServiceRedisTest {
         // Execute and verify exception
         OAuth2AuthenticationException exception = assertThrows(
                 OAuth2AuthenticationException.class,
-                () -> guestCodeService.validateGuestCode("invalid-code", resourceId)
-        );
+                () -> guestCodeService.validateGuestCode("invalid-code", resourceId));
 
         assertEquals("invalid_grant", exception.getError().getErrorCode());
         assertTrue(exception.getMessage().contains("Invalid guest code"));
@@ -107,7 +134,8 @@ public class GuestCodeServiceRedisTest {
         String wrongResourceId = "wrong-resource";
         Instant expiresAt = Instant.now().plus(1, ChronoUnit.HOURS);
 
-        GuestCodeService.GuestCodeInfo codeInfo = new GuestCodeService.GuestCodeInfo(resource, resourceId, true, guestName, guestEmail, redirectUrl, expiresAt);
+        GuestCodeService.GuestCodeInfo codeInfo = new GuestCodeService.GuestCodeInfo(resource, resourceId, true,
+                guestName, guestEmail, redirectUrl, expiresAt, workspaceId);
 
         // Setup Redis mock
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
@@ -116,8 +144,7 @@ public class GuestCodeServiceRedisTest {
         // Execute and verify exception
         OAuth2AuthenticationException exception = assertThrows(
                 OAuth2AuthenticationException.class,
-                () -> guestCodeService.validateGuestCode(guestCode, wrongResourceId)
-        );
+                () -> guestCodeService.validateGuestCode(guestCode, wrongResourceId));
 
         assertEquals("invalid_grant", exception.getError().getErrorCode());
         assertTrue(exception.getMessage().contains("Resource ID mismatch"));
@@ -129,7 +156,8 @@ public class GuestCodeServiceRedisTest {
         String guestCode = "expired-guest-code";
         Instant expiresAt = Instant.now().minus(1, ChronoUnit.HOURS);
 
-        GuestCodeService.GuestCodeInfo codeInfo = new GuestCodeService.GuestCodeInfo(resource, resourceId, true, guestName, guestEmail, redirectUrl, expiresAt);
+        GuestCodeService.GuestCodeInfo codeInfo = new GuestCodeService.GuestCodeInfo(resource, resourceId, true,
+                guestName, guestEmail, redirectUrl, expiresAt, workspaceId);
 
         // Setup Redis mock
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
@@ -138,8 +166,7 @@ public class GuestCodeServiceRedisTest {
         // Execute and verify exception
         OAuth2AuthenticationException exception = assertThrows(
                 OAuth2AuthenticationException.class,
-                () -> guestCodeService.validateGuestCode(guestCode, resourceId)
-        );
+                () -> guestCodeService.validateGuestCode(guestCode, resourceId));
 
         assertEquals("invalid_grant", exception.getError().getErrorCode());
         assertTrue(exception.getMessage().contains("Guest code has expired"));
@@ -155,24 +182,21 @@ public class GuestCodeServiceRedisTest {
         // Test with null guest code
         OAuth2AuthenticationException exception1 = assertThrows(
                 OAuth2AuthenticationException.class,
-                () -> guestCodeService.validateGuestCode(null, resourceId)
-        );
+                () -> guestCodeService.validateGuestCode(null, resourceId));
 
         assertEquals("invalid_grant", exception1.getError().getErrorCode());
 
         // Test with empty guest code
         OAuth2AuthenticationException exception2 = assertThrows(
                 OAuth2AuthenticationException.class,
-                () -> guestCodeService.validateGuestCode("", resourceId)
-        );
+                () -> guestCodeService.validateGuestCode("", resourceId));
 
         assertEquals("invalid_grant", exception2.getError().getErrorCode());
 
         // Test with null resource ID
         OAuth2AuthenticationException exception3 = assertThrows(
                 OAuth2AuthenticationException.class,
-                () -> guestCodeService.validateGuestCode("valid-code", null)
-        );
+                () -> guestCodeService.validateGuestCode("valid-code", null));
 
         assertEquals("invalid_grant", exception3.getError().getErrorCode());
     }

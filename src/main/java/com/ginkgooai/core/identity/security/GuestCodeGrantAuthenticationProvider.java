@@ -1,13 +1,15 @@
 package com.ginkgooai.core.identity.security;
 
-import com.ginkgooai.core.common.security.CustomGrantTypes;
-import com.ginkgooai.core.identity.domain.Role;
-import com.ginkgooai.core.identity.service.GuestCodeService;
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.ClaimAccessor;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
@@ -27,9 +29,9 @@ import org.springframework.security.oauth2.server.authorization.token.OAuth2Toke
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
 import org.springframework.util.Assert;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
+import com.ginkgooai.core.common.security.CustomGrantTypes;
+import com.ginkgooai.core.identity.domain.Role;
+import com.ginkgooai.core.identity.service.GuestCodeService;
 
 public class GuestCodeGrantAuthenticationProvider implements AuthenticationProvider {
 
@@ -51,11 +53,10 @@ public class GuestCodeGrantAuthenticationProvider implements AuthenticationProvi
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        GuestCodeGrantAuthenticationToken guestCodeAuthentication =
-                (GuestCodeGrantAuthenticationToken) authentication;
+        GuestCodeGrantAuthenticationToken guestCodeAuthentication = (GuestCodeGrantAuthenticationToken) authentication;
 
-        OAuth2ClientAuthenticationToken clientPrincipal =
-                getAuthenticatedClientElseThrowInvalidClient(guestCodeAuthentication);
+        OAuth2ClientAuthenticationToken clientPrincipal = getAuthenticatedClientElseThrowInvalidClient(
+                guestCodeAuthentication);
         RegisteredClient registeredClient = clientPrincipal.getRegisteredClient();
 
         if (!registeredClient.getAuthorizationGrantTypes().contains(CustomGrantTypes.GUEST_CODE)) {
@@ -71,15 +72,12 @@ public class GuestCodeGrantAuthenticationProvider implements AuthenticationProvi
         if (codeInfo.write()) {
             scopes.add(String.join(":", codeInfo.resource(), resourceId, "write"));
         }
-        
-//        Authentication guestPrincipal = new UsernamePasswordAuthenticationToken(
-//                codeInfo.guestEmail(),
-//                null,
-//                Arrays.asList(new SimpleGrantedAuthority(Role.ROLE_GUEST)));
 
-        GuestCodeGrantAuthenticationToken grantAuthenticationToken = GuestCodeGrantAuthenticationToken.withAuthorities(guestCodeAuthentication, Arrays.asList(new SimpleGrantedAuthority(Role.ROLE_GUEST)));
+        GuestCodeGrantAuthenticationToken grantAuthenticationToken = GuestCodeGrantAuthenticationToken
+                .withAuthorities(guestCodeAuthentication, Arrays.asList(new SimpleGrantedAuthority(Role.ROLE_GUEST)));
         grantAuthenticationToken.setUserName(codeInfo.guestName());
         grantAuthenticationToken.setEmail(codeInfo.guestEmail());
+        grantAuthenticationToken.setWorkspaceId(codeInfo.workspaceId());
         OAuth2TokenContext tokenContext = DefaultOAuth2TokenContext.builder()
                 .registeredClient(registeredClient)
                 .principal(grantAuthenticationToken)
@@ -88,10 +86,6 @@ public class GuestCodeGrantAuthenticationProvider implements AuthenticationProvi
                 .authorizationGrantType(CustomGrantTypes.GUEST_CODE)
                 .authorizationGrant(guestCodeAuthentication)
                 .authorizedScopes(scopes)
-//                .put("resource_id", resourceId)
-//                .put("guest_email", codeInfo.guestEmail())
-//                .put("redirect_url", codeInfo.redirectUrl())
-//                .put("access_type", "guest")
                 .build();
 
         OAuth2Token generatedAccessToken = this.tokenGenerator.generate(tokenContext);
@@ -115,6 +109,7 @@ public class GuestCodeGrantAuthenticationProvider implements AuthenticationProvi
                 .attribute("guest_email", codeInfo.guestEmail())
                 .attribute("redirect_url", codeInfo.redirectUrl())
                 .attribute("access_type", "guest")
+                .attribute("workspace_id", codeInfo.workspaceId())
                 .token(accessToken, (metadata) -> {
                     if (generatedAccessToken instanceof ClaimAccessor) {
                         metadata.put(OAuth2Authorization.Token.CLAIMS_METADATA_NAME,
@@ -125,12 +120,13 @@ public class GuestCodeGrantAuthenticationProvider implements AuthenticationProvi
 
         this.authorizationService.save(authorization);
 
-        Map<String, Object> additionalParameters = Map.of(
-                "resource_id", guestCodeAuthentication.getResourceId(),
-                "guest_email", codeInfo.guestEmail(),
-                "redirect_url", codeInfo.redirectUrl(),
-                "access_type", "guest"
-        );
+        Map<String, Object> additionalParameters = new HashMap<>();
+        additionalParameters.put("resource_id", guestCodeAuthentication.getResourceId());
+        additionalParameters.put("guest_email", codeInfo.guestEmail());
+        additionalParameters.put("redirect_url", codeInfo.redirectUrl());
+        additionalParameters.put("access_type", "guest");
+        additionalParameters.put("workspace_id", codeInfo.workspaceId());
+
         return new OAuth2AccessTokenAuthenticationToken(
                 registeredClient, grantAuthenticationToken, accessToken, null, additionalParameters);
     }
@@ -140,7 +136,8 @@ public class GuestCodeGrantAuthenticationProvider implements AuthenticationProvi
         return GuestCodeGrantAuthenticationToken.class.isAssignableFrom(authentication);
     }
 
-    private static OAuth2ClientAuthenticationToken getAuthenticatedClientElseThrowInvalidClient(Authentication authentication) {
+    private static OAuth2ClientAuthenticationToken getAuthenticatedClientElseThrowInvalidClient(
+            Authentication authentication) {
         OAuth2ClientAuthenticationToken clientPrincipal = null;
         if (OAuth2ClientAuthenticationToken.class.isAssignableFrom(authentication.getPrincipal().getClass())) {
             clientPrincipal = (OAuth2ClientAuthenticationToken) authentication.getPrincipal();

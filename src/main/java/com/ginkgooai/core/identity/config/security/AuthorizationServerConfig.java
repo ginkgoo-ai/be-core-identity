@@ -23,7 +23,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.client.oidc.session.OidcSessionRegistry;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
@@ -43,7 +42,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -75,63 +76,54 @@ public class AuthorizationServerConfig {
     }
 
     @Bean
-    public OAuth2AuthorizationConsentService authorizationConsentService(JdbcTemplate jdbcTemplate, RegisteredClientRepository registeredClientRepository) {
+    public OAuth2AuthorizationConsentService authorizationConsentService(JdbcTemplate jdbcTemplate,
+            RegisteredClientRepository registeredClientRepository) {
         return new JdbcOAuth2AuthorizationConsentService(
                 jdbcTemplate,
-                registeredClientRepository
-        );
+                registeredClientRepository);
     }
 
     @Bean
     @Order(1)
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http,
-                                                                      OAuth2AuthorizationService authorizationService,
-                                                                      OAuth2TokenGenerator<?> tokenGenerator,
-                                                                      GuestCodeService guestCodeService,
-                                                                      CustomLogoutSuccessHandler customLogoutSuccessHandler)
+            OAuth2AuthorizationService authorizationService,
+            OAuth2TokenGenerator<?> tokenGenerator,
+            GuestCodeService guestCodeService,
+            CustomLogoutSuccessHandler customLogoutSuccessHandler)
             throws Exception {
-        OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
-                OAuth2AuthorizationServerConfigurer.authorizationServer();
+        OAuth2AuthorizationServerConfigurer authorizationServerConfigurer = OAuth2AuthorizationServerConfigurer
+                .authorizationServer();
         http.securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
                 .cors(Customizer.withDefaults())
                 .securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
-                .with(authorizationServerConfigurer, (authorizationServer) ->
-                                authorizationServer
-//                                .authorizationEndpoint(endpoint ->
-//                                        endpoint.consentPage("/oauth2/consent")
-//                                )
-                                        .tokenEndpoint(tokenEndpoint ->
-                                                tokenEndpoint
-                                                        .accessTokenRequestConverter(
-                                                                new GuestCodeGrantAuthenticationConverter())
-                                                        .authenticationProvider(
-                                                                new GuestCodeGrantAuthenticationProvider(
-                                                                        authorizationService,
-                                                                        tokenGenerator,
-                                                                        guestCodeService)))
-                                        .oidc(oidc -> oidc
-                                                .userInfoEndpoint(userInfo -> userInfo
-                                                        .userInfoMapper(userInfoMapperWithCustomClaims())
-                                                )
-                                                .logoutEndpoint(logout -> logout
-                                                        .logoutResponseHandler(customLogoutSuccessHandler)
-                                                )
-                                                .clientRegistrationEndpoint(Customizer.withDefaults())
-                                        )
+                .with(authorizationServerConfigurer, (authorizationServer) -> authorizationServer
+                        // .authorizationEndpoint(endpoint ->
+                        // endpoint.consentPage("/oauth2/consent")
+                        // )
+                        .tokenEndpoint(tokenEndpoint -> tokenEndpoint
+                                .accessTokenRequestConverter(
+                                        new GuestCodeGrantAuthenticationConverter())
+                                .authenticationProvider(
+                                        new GuestCodeGrantAuthenticationProvider(
+                                                authorizationService,
+                                                tokenGenerator,
+                                                guestCodeService)))
+                        .oidc(oidc -> oidc
+                                .userInfoEndpoint(userInfo -> userInfo
+                                        .userInfoMapper(userInfoMapperWithCustomClaims()))
+                                .logoutEndpoint(logout -> logout
+                                        .logoutResponseHandler(customLogoutSuccessHandler))
+                                .clientRegistrationEndpoint(Customizer.withDefaults()))
 
                 )
-                .authorizeHttpRequests((authorize) ->
-                        authorize
-                                .anyRequest().authenticated()
-                )
+                .authorizeHttpRequests((authorize) -> authorize
+                        .anyRequest().authenticated())
                 // Redirect to the OAuth 2.0 Login endpoint when not authenticated
                 .exceptionHandling((exceptions) -> exceptions
-                                .defaultAuthenticationEntryPointFor(
-//                                new LoginUrlAuthenticationEntryPoint("http://127.0.0.1:4000/login"),
-                                        new LoginUrlAuthenticationEntryPoint("/login"),
-                                        new MediaTypeRequestMatcher(MediaType.TEXT_HTML)
-                                )
-                );
+                        .defaultAuthenticationEntryPointFor(
+                                // new LoginUrlAuthenticationEntryPoint("http://127.0.0.1:4000/login"),
+                                new LoginUrlAuthenticationEntryPoint("/login"),
+                                new MediaTypeRequestMatcher(MediaType.TEXT_HTML)));
 
         return http.build();
     }
@@ -158,22 +150,19 @@ public class AuthorizationServerConfig {
 
             if (email == null) {
                 throw new OAuth2AuthenticationException(
-                        new OAuth2Error("invalid_token", "Email claim not found in token", null)
-                );
+                        new OAuth2Error("invalid_token", "Email claim not found in token", null));
             }
 
             UserResponse userResponse = userService.loadUser(email);
             if (userResponse == null) {
                 throw new OAuth2AuthenticationException(
-                        new OAuth2Error("invalid_user", "User not found with email: " + email, null)
-                );
+                        new OAuth2Error("invalid_user", "User not found with email: " + email, null));
             }
 
             String sub = authorization.getAccessToken().getClaims().get("sub").toString();
             return buildOidcUserInfo(userResponse, sub);
         };
     }
-
 
     private String extractEmail(OAuth2Authorization authorization) {
         Object principal = authorization.getAttribute("java.security.Principal");
@@ -184,7 +173,7 @@ public class AuthorizationServerConfig {
             return oauth2User.getAttribute("email");
         }
 
-        // Form login 
+        // Form login
         if (principal instanceof UsernamePasswordAuthenticationToken token) {
             Object userDetails = token.getPrincipal();
 
@@ -193,7 +182,7 @@ public class AuthorizationServerConfig {
             }
 
             if (userDetails instanceof UserDetails user) {
-                return user.getUsername(); //email as username login
+                return user.getUsername(); // email as username login
             }
         }
 
@@ -221,6 +210,4 @@ public class AuthorizationServerConfig {
 
         return new OidcUserInfo(claims);
     }
-
-
 }

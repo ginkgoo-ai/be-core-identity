@@ -1,92 +1,101 @@
 package com.ginkgooai.core.identity.controller;
 
-import com.ginkgooai.core.identity.service.GuestCodeService;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.time.Instant;
-import java.util.Map;
+import com.ginkgooai.core.identity.service.GuestCodeService;
 
 @RestController
 @RequestMapping("/guest-codes")
 public class GuestCodeController {
 
-    @Autowired
-    private GuestCodeService guestCodeService;
+        @Autowired
+        private GuestCodeService guestCodeService;
 
-    @PostMapping
-    @PreAuthorize("hasAuthority('SCOPE_guest_code.create')")
-    public ResponseEntity<GuestCodeResponse> generateGuestCode(@RequestBody GuestCodeRequest request) {
-        if (request.resource() == null || request.resourceId() == null || request.guestEmail() == null) {
-            return ResponseEntity.badRequest().build();
+        @PostMapping
+        @PreAuthorize("hasAuthority('SCOPE_guest_code.create')")
+        public ResponseEntity<GuestCodeResponse> generateGuestCode(@RequestBody GuestCodeRequest request) {
+                if (request.resource() == null || request.resourceId() == null || request.guestEmail() == null) {
+                        return ResponseEntity.badRequest().build();
+                }
+
+                int expiryHours = request.expiryHours() > 0 ? request.expiryHours() : 24;
+
+                String guestCode = guestCodeService.generateGuestCode(
+                                request.resource(),
+                                request.resourceId(),
+                                request.write(),
+                                request.guestName(),
+                                request.guestEmail(),
+                                request.redirectUrl(),
+                                expiryHours,
+                                request.workspaceId());
+
+                Instant expiresAt = Instant.now().plusSeconds(expiryHours * 3600L);
+
+                return ResponseEntity.ok(new GuestCodeResponse(
+                                guestCode,
+                                request.resourceId(),
+                                expiresAt.toString(),
+                                expiryHours));
         }
 
-        int expiryHours = request.expiryHours() > 0 ? request.expiryHours() : 24;
+        @GetMapping("/validate")
+        @PreAuthorize("hasAuthority('SCOPE_guest_code.validate')")
+        public ResponseEntity<?> validateGuestCode(
+                        @RequestParam("code") String guestCode,
+                        @RequestParam("resource_id") String resourceId) {
 
-        String guestCode = guestCodeService.generateGuestCode(
-                request.resource(),
-                request.resourceId(),
-                request.write(),
-                request.guestName(),
-                request.guestEmail(),
-                request.redirectUrl(),
-                expiryHours
-        );
+                try {
+                        GuestCodeService.GuestCodeInfo codeInfo = guestCodeService.validateGuestCode(guestCode,
+                                        resourceId);
 
-        Instant expiresAt = Instant.now().plusSeconds(expiryHours * 3600L);
+                        Map<String, Object> responseMap = new HashMap<>();
+                        responseMap.put("valid", true);
+                        responseMap.put("resource", codeInfo.resource());
+                        responseMap.put("resourceId", codeInfo.resourceId());
+                        responseMap.put("write", codeInfo.write());
+                        responseMap.put("guestEmail", codeInfo.guestEmail());
+                        responseMap.put("expiresAt", codeInfo.expiresAt().toString());
 
-        return ResponseEntity.ok(new GuestCodeResponse(
-                guestCode,
-                request.resourceId(),
-                expiresAt.toString(),
-                expiryHours
-        ));
-    }
+                        if (codeInfo.workspaceId() != null) {
+                                responseMap.put("workspaceId", codeInfo.workspaceId());
+                        }
 
-    @GetMapping("/validate")
-    @PreAuthorize("hasAuthority('SCOPE_guest_code.validate')")
-    public ResponseEntity<?> validateGuestCode(
-            @RequestParam("code") String guestCode,
-            @RequestParam("resource_id") String resourceId) {
-
-        try {
-            GuestCodeService.GuestCodeInfo codeInfo =
-                    guestCodeService.validateGuestCode(guestCode, resourceId);
-
-            return ResponseEntity.ok(Map.of(
-                    "valid", true,
-                    "resource", codeInfo.resource(),
-                    "resourceId", codeInfo.resourceId(),
-                    "write", codeInfo.write(),
-                    "guestEmail", codeInfo.guestEmail(),
-                    "expiresAt", codeInfo.expiresAt().toString()
-            ));
-        } catch (Exception e) {
-            return ResponseEntity.ok(Map.of(
-                    "valid", false,
-                    "error", e.getMessage()
-            ));
+                        return ResponseEntity.ok(responseMap);
+                } catch (Exception e) {
+                        return ResponseEntity.ok(Map.of(
+                                        "valid", false,
+                                        "error", e.getMessage()));
+                }
         }
-    }
 
-    public record GuestCodeRequest(
-            String resource,
-            String resourceId,
-            boolean write,
-            String guestName,
-            String guestEmail,
-            String redirectUrl,
-            int expiryHours
-    ) {
-    }
+        public record GuestCodeRequest(
+                        String resource,
+                        String resourceId,
+                        boolean write,
+                        String guestName,
+                        String guestEmail,
+                        String redirectUrl,
+                        int expiryHours,
+                        String workspaceId) {
+        }
 
-    public record GuestCodeResponse(
-            String guestCode,
-            String resourceId,
-            String expiresAt,
-            int expiryHours
-    ) {
-    }
+        public record GuestCodeResponse(
+                        String guestCode,
+                        String resourceId,
+                        String expiresAt,
+                        int expiryHours) {
+        }
 }

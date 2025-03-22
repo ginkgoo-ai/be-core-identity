@@ -24,6 +24,7 @@ public class GuestCodeGrantAuthenticationToken extends AbstractAuthenticationTok
     private String name;
     private String userName;
     private String email;
+    private String workspaceId;
     private final String guestCode;
     private final String resourceId;
     private final Authentication clientPrincipal;

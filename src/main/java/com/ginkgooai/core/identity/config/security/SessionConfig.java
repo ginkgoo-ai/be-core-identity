@@ -14,16 +14,12 @@ import org.springframework.session.web.http.HttpSessionIdResolver;
 @EnableSpringHttpSession
 public class SessionConfig {
     
-    @Value("${app.domain-name}")
-    private String domainName;
-
     @Bean
     public CookieSerializer cookieSerializer() {
         DefaultCookieSerializer serializer = new DefaultCookieSerializer();
         serializer.setSameSite("None");
         // Set to true if using HTTPS
         serializer.setUseSecureCookie(true);
-//        serializer.setDomainName(domainName);
         serializer.setCookiePath("/");
         return serializer;
     }

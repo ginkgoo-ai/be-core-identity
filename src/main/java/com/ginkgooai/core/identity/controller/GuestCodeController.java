@@ -24,7 +24,6 @@ public class GuestCodeController {
         private GuestCodeService guestCodeService;
 
         @PostMapping
-        @PreAuthorize("hasAuthority('SCOPE_guest_code.create')")
         public ResponseEntity<GuestCodeResponse> generateGuestCode(@RequestBody GuestCodeRequest request) {
                 if (request.resource() == null || request.resourceId() == null || request.guestEmail() == null) {
                         return ResponseEntity.badRequest().build();
@@ -52,7 +51,6 @@ public class GuestCodeController {
         }
 
         @GetMapping("/validate")
-        @PreAuthorize("hasAuthority('SCOPE_guest_code.validate')")
         public ResponseEntity<?> validateGuestCode(
                         @RequestParam("code") String guestCode,
                         @RequestParam("resource_id") String resourceId) {

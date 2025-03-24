@@ -1,6 +1,9 @@
 server:
   port: ${CORE_IDENTITY_PORT}
   shutdown: graceful
+  servlet:
+    session:
+      timeout: 1D
 
 spring:
   mvc:

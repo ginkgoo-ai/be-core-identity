@@ -2,6 +2,7 @@ package com.ginkgooai.core.identity.controller;
 
 import com.ginkgooai.core.identity.domain.Role;
 import com.ginkgooai.core.identity.domain.UserInfo;
+import com.ginkgooai.core.identity.domain.UserStatus;
 import com.ginkgooai.core.identity.dto.request.*;
 import com.ginkgooai.core.identity.dto.response.UserResponse;
 import com.ginkgooai.core.identity.exception.InvalidVerificationCodeException;
@@ -54,6 +55,7 @@ public class UserInfoController {
                     .name(jwt.getClaim("name"))
                     .picture("") //todo: set a default guest picture
                     .roles(roles)
+                    .status(UserStatus.ACTIVE)
                     .build();
         } else {
             userInfo = userService.getUserById(jwt.getSubject());

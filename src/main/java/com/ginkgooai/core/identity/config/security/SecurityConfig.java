@@ -29,6 +29,8 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -40,12 +42,17 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.client.web.*;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -247,7 +254,55 @@ public class SecurityConfig {
                         .authenticationEntryPoint(new ProblemDetailsAuthenticationEntryPoint())
                         .accessDeniedHandler(new ProblemDetailsAccessDeniedHandler())
                 )
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt
+                                .jwtAuthenticationConverter(
+                                        jwtAuthenticationConverter())))
                 .build();
+    }
+
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtAuthenticationConverter jwtConverter = new JwtAuthenticationConverter();
+
+        jwtConverter.setPrincipalClaimName("email");
+        jwtConverter.setJwtGrantedAuthoritiesConverter(jwt -> {
+            Collection<GrantedAuthority> authorities = new ArrayList<>();
+            List<String> roles = getClaimAsList(jwt, "role");
+            if (roles != null) {
+                for (String role : roles) {
+                    authorities.add(new SimpleGrantedAuthority(role.toUpperCase()));
+                }
+            }
+
+            List<String> scopes = getClaimAsList(jwt, "scope");
+            if (scopes != null) {
+                for (String scope : scopes) {
+                    authorities.add(new SimpleGrantedAuthority(scope));
+                }
+            }
+
+            return authorities;
+        });
+
+        return jwtConverter;
+    }
+
+    private List<String> getClaimAsList(Jwt jwt, String claimName) {
+        Object claimValue = jwt.getClaim(claimName);
+
+        if (claimValue == null) {
+            return null;
+        }
+
+        if (claimValue instanceof List) {
+            return (List<String>) claimValue;
+        }
+
+        if (claimValue instanceof String) {
+            return List.of(((String) claimValue).split(" "));
+        }
+
+        return null;
     }
 
     @Bean

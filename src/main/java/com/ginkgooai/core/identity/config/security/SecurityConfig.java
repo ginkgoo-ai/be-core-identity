@@ -214,9 +214,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/users/*/email/verification").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users/password-resets").permitAll()
                         .requestMatchers(HttpMethod.PATCH, "/users/password-resets/*").permitAll()
-                        .requestMatchers(
-                                "/users/me"
-                        ).authenticated()
+                        .requestMatchers(HttpMethod.GET, "/users/me").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/users").authenticated()
                         .anyRequest().hasRole("USER")
                 )
                 .oauth2Login(oauth2 -> oauth2

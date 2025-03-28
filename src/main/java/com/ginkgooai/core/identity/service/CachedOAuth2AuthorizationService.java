@@ -4,8 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -29,21 +27,18 @@ import java.util.Map;
 
 @Service
 @Slf4j
-@CacheConfig(cacheNames = "oauth2_authorization")
+//@CacheConfig(cacheNames = "oauth2_authorization")
 public class CachedOAuth2AuthorizationService extends JdbcOAuth2AuthorizationService {
 
     private final JdbcTemplate jdbcTemplate;
     private final RegisteredClientRepository registeredClientRepository;
-    private final CacheManager cacheManager;
 
     public CachedOAuth2AuthorizationService(
             JdbcTemplate jdbcTemplate,
-            RegisteredClientRepository registeredClientRepository,
-            CacheManager cacheManager) {
+            RegisteredClientRepository registeredClientRepository) {
         super(jdbcTemplate, registeredClientRepository);
         this.jdbcTemplate = jdbcTemplate;
         this.registeredClientRepository = registeredClientRepository;
-        this.cacheManager = cacheManager;
     }
 
     @Override

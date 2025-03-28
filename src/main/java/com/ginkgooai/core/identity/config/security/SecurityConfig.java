@@ -216,7 +216,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/users/password-resets/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/users/me").authenticated()
                         .requestMatchers(HttpMethod.GET, "/users").authenticated()
-                        .anyRequest().hasRole("USER")
+                        .anyRequest().hasAnyRole("USER", "ADMIN")
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login")
@@ -251,7 +251,7 @@ public class SecurityConfig {
                 )
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(new ProblemDetailsAuthenticationEntryPoint())
-                        .accessDeniedHandler(new ProblemDetailsAccessDeniedHandler())
+                        .accessDeniedHandler(new ProblemDetailsAuthenticationEntryPoint())
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt

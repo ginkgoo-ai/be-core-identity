@@ -17,6 +17,7 @@ public class SessionConfig {
         DefaultCookieSerializer serializer = new DefaultCookieSerializer();
         serializer.setSameSite("None");
         // Set to true if using HTTPS
+        serializer.setCookieName("AUTH_SESSION");
         serializer.setUseSecureCookie(true);
         serializer.setCookiePath("/");
         return serializer;

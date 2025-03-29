@@ -4,6 +4,8 @@ server:
   servlet:
     session:
       timeout: 1D
+      cookie:
+        name: AUTH_SESSION
 
 spring:
   mvc:

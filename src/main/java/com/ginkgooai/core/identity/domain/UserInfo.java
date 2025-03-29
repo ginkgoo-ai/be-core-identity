@@ -4,16 +4,12 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.*;
-import org.apache.commons.lang3.StringUtils;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -25,7 +21,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Table(name = "user_info")
 @EntityListeners(AuditingEntityListener.class)
-public class UserInfo implements UserDetails {
+public class UserInfo extends BaseAuditableEntity implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -89,22 +85,6 @@ public class UserInfo implements UserDetails {
         return mfaInfos.stream()
                 .filter(MfaInfo::isEnabled)
                 .collect(Collectors.toList());
-    }
-
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at", nullable = true)
-    private LocalDateTime updatedAt;
-
-    @Transient
-    public String getFullName() {
-        return String.format("%s %s",
-                StringUtils.defaultString(firstName, ""),
-                StringUtils.defaultString(lastName, "")
-        ).trim();
     }
 
     public boolean isEmailVerified() {

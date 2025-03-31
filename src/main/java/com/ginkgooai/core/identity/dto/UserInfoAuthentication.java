@@ -1,6 +1,6 @@
 package com.ginkgooai.core.identity.dto;
 
-import com.ginkgooai.core.identity.domain.Role;
+import com.ginkgooai.core.common.enums.Role;
 import com.ginkgooai.core.identity.domain.UserInfo;
 import com.ginkgooai.core.identity.domain.UserStatus;
 import lombok.Getter;
@@ -9,9 +9,9 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Getter
@@ -23,7 +23,7 @@ public class UserInfoAuthentication implements UserDetails {
     private String firstName;
     private String lastName;
     private UserStatus status;
-    private Set<Role> roles = new HashSet<>();
+    private List<Role> roles = new ArrayList<>();
 
     public static UserInfoAuthentication from(UserInfo userInfo) {
         UserInfoAuthentication auth = new UserInfoAuthentication();
@@ -40,7 +40,7 @@ public class UserInfoAuthentication implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream()
-            .map(role -> new SimpleGrantedAuthority(role.getName()))
+            .map(role -> new SimpleGrantedAuthority(role.name()))
             .collect(Collectors.toList());
     }
 

@@ -1,8 +1,7 @@
 package com.ginkgooai.core.identity.security;
 
-import java.util.HashMap;
-import java.util.Map;
-
+import com.ginkgooai.core.identity.dto.response.UserResponse;
+import com.ginkgooai.core.identity.service.UserService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
@@ -11,9 +10,8 @@ import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 
-import com.ginkgooai.core.common.security.CustomGrantTypes;
-import com.ginkgooai.core.identity.dto.response.UserResponse;
-import com.ginkgooai.core.identity.service.UserService;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Customizes ID Token and Access Token by replacing Google's sub with local
@@ -30,39 +28,28 @@ public final class FederatedIdentityIdTokenCustomizer implements OAuth2TokenCust
 
 	@Override
 	public void customize(JwtEncodingContext context) {
-		// guest_code grant type
-		if (context.getAuthorizationGrantType() == CustomGrantTypes.GUEST_CODE) {
-			GuestCodeGrantAuthenticationToken principal = context.getPrincipal();
-			context.getClaims().claims(existingClaims -> {
-				existingClaims.put("email", principal.getEmail());
-				existingClaims.put("name", principal.getUserName());
-				existingClaims.put("role", principal.getAuthorities().stream().findFirst().get().getAuthority());
-				existingClaims.put("workspace_id", principal.getWorkspaceId());
-			});
-		} else if (OidcParameterNames.ID_TOKEN.equals(context.getTokenType().getValue()) ||
-				OAuth2TokenType.ACCESS_TOKEN.getValue().equals(context.getTokenType().getValue())) {
+		if (OidcParameterNames.ID_TOKEN.equals(context.getTokenType().getValue()) ||
+			OAuth2TokenType.ACCESS_TOKEN.getValue().equals(context.getTokenType().getValue())) {
 
 			Map<String, Object> claims = extractClaims(context.getPrincipal());
 			String email = claims.get("email").toString();
 
 			UserResponse localUser = userService.loadUser(email);
 			context.getClaims().claims(existingClaims -> {
-				// Store original Google sub
-				String googleSub = existingClaims.get("sub").toString();
-
-				// Replace sub with local user ID and keep original as google_sub
-				existingClaims.put("google_sub", googleSub);
-				existingClaims.put("sub", localUser.getId());
+				existingClaims.put("sub", localUser.getId()); //replace social login sub(Google) with local user ID
 				existingClaims.put("name", localUser.getName());
 				existingClaims.put("email", email);
 				existingClaims.put("role", localUser.getRoles());
+				if (claims.get("workspace_id") != null) {
+					existingClaims.put("workspace_id", claims.get("workspace_id"));
+				}
 			});
 		}
 	}
 
 	/**
 	 * Extracts claims from the authentication principal
-	 * 
+	 *
 	 * @param principal The authentication principal
 	 * @return Map of claims
 	 */
@@ -71,6 +58,8 @@ public final class FederatedIdentityIdTokenCustomizer implements OAuth2TokenCust
 			return ((OidcUser) principal.getPrincipal()).getIdToken().getClaims();
 		} else if (principal.getPrincipal() instanceof OAuth2User) {
 			return ((OAuth2User) principal.getPrincipal()).getAttributes();
+		} else if (principal instanceof ShareCodeGrantAuthenticationToken) {
+			return ((ShareCodeGrantAuthenticationToken) principal).extractClaims();
 		}
 		return new HashMap<>();
 	}

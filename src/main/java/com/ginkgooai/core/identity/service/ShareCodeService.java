@@ -1,10 +1,6 @@
 package com.ginkgooai.core.identity.service;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -12,12 +8,15 @@ import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Service
-public class GuestCodeService {
+public class ShareCodeService {
 
-    private static final String REDIS_KEY_PREFIX = "guest_code:";
+    private static final String REDIS_KEY_PREFIX = "share_code:";
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
@@ -27,67 +26,50 @@ public class GuestCodeService {
      *
      * @param resource    The Type of the resource to be accessed
      * @param resourceId  The ID of the resource to be accessed
+     * @param userId      The ID of the user
      * @param write       Whether the guest has write access
-     * @param guestEmail  The email of the guest who will access the resource
      * @param expiryHours Number of hours until the code expires
      * @param workspaceId The ID of the workspace (optional)
      * @return The generated guest code
      */
-    public String generateGuestCode(String resource, String resourceId, boolean write, String guestName,
-            String guestEmail, String redirectUrl, int expiryHours, String workspaceId) {
+    public String generateShareCode(String resource, String resourceId, String userId, boolean write, int expiryHours, String workspaceId) {
         // Generate a random code
-        String guestCode = UUID.randomUUID().toString();
+        String shareCode = UUID.randomUUID().toString();
 
         // Calculate expiry time
         Instant expiresAt = Instant.now().plus(expiryHours, ChronoUnit.HOURS);
 
-        // Create guest code info
-        GuestCodeInfo codeInfo = new GuestCodeInfo(resource, resourceId, write, guestName, guestEmail, redirectUrl,
-                expiresAt, workspaceId);
+        // Create share code info
+        ShareCodeInfo codeInfo = new ShareCodeInfo(resource, resourceId, write, userId, expiresAt, workspaceId);
 
         // Store in Redis with expiration
-        String redisKey = REDIS_KEY_PREFIX + guestCode;
+        String redisKey = REDIS_KEY_PREFIX + shareCode;
         redisTemplate.opsForValue().set(redisKey, codeInfo, expiryHours, TimeUnit.HOURS);
 
-        return guestCode;
-    }
-
-    /**
-     * Backward compatibility method for existing code
-     */
-    public String generateGuestCode(String resource, String resourceId, boolean write, String guestName,
-            String guestEmail, String redirectUrl, int expiryHours) {
-        return generateGuestCode(resource, resourceId, write, guestName, guestEmail, redirectUrl, expiryHours, null);
+        return shareCode;
     }
 
     /**
      * Validates a guest code for a specific resource.
-     * 
-     * @param guestCode  The guest code to validate
-     * @param resourceId The resource ID to validate against
+     *
+     * @param shareCode  The share code to validate
      * @return The guest code information if valid
      * @throws OAuth2AuthenticationException if the code is invalid or expired
      */
-    public GuestCodeInfo validateGuestCode(String guestCode, String resourceId) {
-        if (!StringUtils.hasText(guestCode) || !StringUtils.hasText(resourceId)) {
+    public ShareCodeInfo validateShareCode(String shareCode) {
+        if (!StringUtils.hasText(shareCode)) {
             throw new OAuth2AuthenticationException(
                     new OAuth2Error("invalid_grant", "Guest code or resource ID is missing", null));
         }
 
         // Get code info from Redis
-        String redisKey = REDIS_KEY_PREFIX + guestCode;
-        GuestCodeInfo codeInfo = (GuestCodeInfo) redisTemplate.opsForValue().get(redisKey);
+        String redisKey = REDIS_KEY_PREFIX + shareCode;
+        ShareCodeInfo codeInfo = (ShareCodeInfo) redisTemplate.opsForValue().get(redisKey);
 
         // Validate code exists
         if (codeInfo == null) {
             throw new OAuth2AuthenticationException(
                     new OAuth2Error("invalid_grant", "Invalid guest code", null));
-        }
-
-        // Validate resource ID
-        if (!resourceId.equals(codeInfo.resourceId())) {
-            throw new OAuth2AuthenticationException(
-                    new OAuth2Error("invalid_grant", "Resource ID mismatch", null));
         }
 
         // Validate expiration
@@ -105,27 +87,23 @@ public class GuestCodeService {
      * Guest code information record.
      */
     @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
-    public record GuestCodeInfo(
+    public record ShareCodeInfo(
             String resource,
             String resourceId,
             boolean write,
-            String guestName,
-            String guestEmail,
-            String redirectUrl,
+            String userId,
             Instant expiresAt,
             String workspaceId) {
         /**
          * Backward compatibility constructor
          */
-        public GuestCodeInfo(
+        public ShareCodeInfo(
                 String resource,
                 String resourceId,
                 boolean write,
-                String guestName,
-                String guestEmail,
-                String redirectUrl,
+                String userId,
                 Instant expiresAt) {
-            this(resource, resourceId, write, guestName, guestEmail, redirectUrl, expiresAt, null);
+            this(resource, resourceId, write, userId, expiresAt, null);
         }
     }
 }

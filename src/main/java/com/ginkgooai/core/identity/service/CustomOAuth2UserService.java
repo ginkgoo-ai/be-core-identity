@@ -1,10 +1,9 @@
 package com.ginkgooai.core.identity.service;
 
-import com.ginkgooai.core.identity.domain.Role;
+import com.ginkgooai.core.common.enums.Role;
 import com.ginkgooai.core.identity.domain.UserInfo;
 import com.ginkgooai.core.identity.domain.UserSocialConnection;
 import com.ginkgooai.core.identity.domain.enums.SocialProviderType;
-import com.ginkgooai.core.identity.repository.RoleRepository;
 import com.ginkgooai.core.identity.repository.UserRepository;
 import com.ginkgooai.core.identity.repository.UserSocialConnectionRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +15,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.Optional;
 
 @Service
@@ -25,7 +24,6 @@ import java.util.Optional;
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
     private final UserSocialConnectionRepository socialConnectionRepository;
 
     @Override
@@ -139,11 +137,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 newUser.setEmail(email);
                 newUser.setFirstName(firstName);
                 newUser.setLastName(lastName);
-                newUser.setRoles(new HashSet<>());
-
-                Role userRole = roleRepository.findByName(Role.ROLE_USER)
-                        .orElseThrow(() -> new RuntimeException("Default role not found"));
-                newUser.getRoles().add(userRole);
+                newUser.setRoles(new ArrayList<>());
+                newUser.getRoles().add(Role.ROLE_USER);
 
                 return newUser;
             });

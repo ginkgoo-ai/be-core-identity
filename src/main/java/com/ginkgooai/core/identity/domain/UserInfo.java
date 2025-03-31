@@ -1,9 +1,12 @@
 package com.ginkgooai.core.identity.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.ginkgooai.core.common.enums.Role;
+import com.ginkgooai.core.identity.domain.enums.LoginMethod;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.*;
+import org.hibernate.annotations.Type;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -36,6 +39,10 @@ public class UserInfo extends BaseAuditableEntity implements UserDetails {
     @JsonIgnore
     private String password;
 
+    @Type(LoginMethodArrayType.class)
+    @Column(name = "login_methods", columnDefinition = "varchar[]")
+    private List<LoginMethod> loginMethods;
+
     @Column(name = "first_name", length = 100)
     private String firstName;
 
@@ -55,13 +62,9 @@ public class UserInfo extends BaseAuditableEntity implements UserDetails {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserSocialConnection> socialConnections = new HashSet<>();
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinTable(
-            name = "user_role",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
-    private Set<Role> roles = new HashSet<>();
+    @Type(RoleArrayType.class)
+    @Column(name = "roles", columnDefinition = "varchar[]")
+    private List<Role> roles;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<MfaInfo> mfaInfos = new HashSet<>();
@@ -115,9 +118,13 @@ public class UserInfo extends BaseAuditableEntity implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
+        if (roles == null || roles.size() == 0) {
+            return Collections.emptyList();
+        }
+
         return roles.stream()
-                .map(role -> new SimpleGrantedAuthority(role.getName()))
-                .collect(Collectors.toList());
+            .map(role -> new SimpleGrantedAuthority(role.name()))
+            .collect(Collectors.toList());
     }
 
     @Override

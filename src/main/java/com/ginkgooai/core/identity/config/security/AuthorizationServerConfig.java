@@ -4,9 +4,9 @@ import com.ginkgooai.core.identity.dto.UserInfoAuthentication;
 import com.ginkgooai.core.identity.dto.response.UserResponse;
 import com.ginkgooai.core.identity.handler.CustomLogoutSuccessHandler;
 import com.ginkgooai.core.identity.security.FederatedIdentityIdTokenCustomizer;
-import com.ginkgooai.core.identity.security.GuestCodeGrantAuthenticationConverter;
-import com.ginkgooai.core.identity.security.GuestCodeGrantAuthenticationProvider;
-import com.ginkgooai.core.identity.service.GuestCodeService;
+import com.ginkgooai.core.identity.security.ShareCodeGrantAuthenticationConverter;
+import com.ginkgooai.core.identity.security.ShareCodeGrantAuthenticationProvider;
+import com.ginkgooai.core.identity.service.ShareCodeService;
 import com.ginkgooai.core.identity.service.UserService;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
@@ -42,9 +42,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -88,7 +86,7 @@ public class AuthorizationServerConfig {
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http,
             OAuth2AuthorizationService authorizationService,
             OAuth2TokenGenerator<?> tokenGenerator,
-            GuestCodeService guestCodeService,
+                                                                      ShareCodeService shareCodeService,
             CustomLogoutSuccessHandler customLogoutSuccessHandler)
             throws Exception {
         OAuth2AuthorizationServerConfigurer authorizationServerConfigurer = OAuth2AuthorizationServerConfigurer
@@ -102,12 +100,13 @@ public class AuthorizationServerConfig {
                         // )
                         .tokenEndpoint(tokenEndpoint -> tokenEndpoint
                                 .accessTokenRequestConverter(
-                                        new GuestCodeGrantAuthenticationConverter())
+                                    new ShareCodeGrantAuthenticationConverter())
                                 .authenticationProvider(
-                                        new GuestCodeGrantAuthenticationProvider(
+                                    new ShareCodeGrantAuthenticationProvider(
                                                 authorizationService,
                                                 tokenGenerator,
-                                                guestCodeService)))
+                                        shareCodeService,
+                                        userService)))
                         .oidc(oidc -> oidc
                                 .userInfoEndpoint(userInfo -> userInfo
                                         .userInfoMapper(userInfoMapperWithCustomClaims()))

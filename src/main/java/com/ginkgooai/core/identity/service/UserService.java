@@ -1,14 +1,14 @@
 package com.ginkgooai.core.identity.service;
 
-import com.ginkgooai.core.identity.domain.Role;
+import com.ginkgooai.core.common.enums.Role;
 import com.ginkgooai.core.identity.domain.TokenIdentity;
 import com.ginkgooai.core.identity.domain.UserInfo;
 import com.ginkgooai.core.identity.domain.UserStatus;
+import com.ginkgooai.core.identity.domain.enums.LoginMethod;
 import com.ginkgooai.core.identity.dto.request.RegistrationRequest;
 import com.ginkgooai.core.identity.dto.response.UserResponse;
 import com.ginkgooai.core.identity.enums.VerificationStrategy;
 import com.ginkgooai.core.identity.exception.*;
-import com.ginkgooai.core.identity.repository.RoleRepository;
 import com.ginkgooai.core.identity.repository.UserRepository;
 import com.ginkgooai.core.identity.service.verification.EmailVerificationStrategy;
 import com.ginkgooai.core.identity.service.verification.EmailVerificationStrategyFactory;
@@ -29,8 +29,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,7 +38,6 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
 //    private final OAuth2RegisteredClientRepository clientRepository;
     private final VerificationCodeService verificationCodeService;
     private final EmailVerificationStrategyFactory strategyFactory;
@@ -80,12 +77,10 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
-        user.setRoles(new HashSet<>());
+        user.setRoles(new ArrayList<>());
 
         // Add default USER role
-        Role userRole = roleRepository.findByName(Role.ROLE_USER)
-                .orElseThrow(() -> new RoleNotFoundException("Default role 'ROLE_USER' not found"));
-        user.getRoles().add(userRole);
+        user.getRoles().add(Role.ROLE_USER);
 
         UserInfo savedUser = userRepository.save(user);
         log.info("Successfully created user with email: {}", request.getEmail());
@@ -94,6 +89,30 @@ public class UserService {
         EmailVerificationStrategy verificationStrategy = strategyFactory.getStrategy(defaultStrategy);
         String credential = verificationStrategy.generateCredential(clientId, savedUser.getId());
         emailService.sendVerificationEmail(request.getEmail(), credential, redirectUri, defaultStrategy);
+
+        return UserResponse.from(savedUser);
+    }
+
+    @Transactional
+    public UserResponse createTempUser(RegistrationRequest request) {
+        log.debug("Creating new user with email: {}", request.getEmail());
+
+        if (userRepository.existsByEmail(request.getEmail())) {
+            log.warn("Attempted to create user with existing email: {}", request.getEmail());
+            throw new EmailAlreadyExistsException(String.format("User with email '%s' already exists", request.getEmail()));
+        }
+
+        UserInfo user = new UserInfo();
+        user.setEmail(request.getEmail());
+        user.setName(request.getName());
+        user.setStatus(UserStatus.ACTIVE);
+        user.setRoles(new ArrayList<>());
+        user.getRoles().add(Role.ROLE_USER);
+        user.setLoginMethods(new ArrayList<>());
+        user.getLoginMethods().add(LoginMethod.TEMP_TOKEN);
+
+        UserInfo savedUser = userRepository.save(user);
+        log.info("Successfully created user with email: {}", request.getEmail());
 
         return UserResponse.from(savedUser);
     }

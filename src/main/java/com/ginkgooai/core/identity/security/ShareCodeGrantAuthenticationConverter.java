@@ -13,34 +13,28 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class GuestCodeGrantAuthenticationConverter implements AuthenticationConverter {
+public class ShareCodeGrantAuthenticationConverter implements AuthenticationConverter {
 
-    private static final String GRANT_TYPE_GUEST_CODE = CustomGrantTypes.GUEST_CODE.getValue(); 
-    private static final String GUEST_CODE_PARAMETER = "guest_code";
+    private static final String GRANT_TYPE = CustomGrantTypes.SHARE_CODE.getValue();
+    private static final String SHARE_CODE_PARAMETER = "share_code";
     private static final String RESOURCE_ID_PARAMETER = "resource_id";
 
     @Nullable
     @Override
     public Authentication convert(HttpServletRequest request) {
         String grantType = request.getParameter(OAuth2ParameterNames.GRANT_TYPE);
-        if (!GRANT_TYPE_GUEST_CODE.equals(grantType)) {
+        if (!GRANT_TYPE.equals(grantType)) {
             return null;
         }
 
         Authentication clientPrincipal = SecurityContextHolder.getContext().getAuthentication();
         MultiValueMap<String, String> parameters = getParameters(request);
 
-        String guestCode = parameters.getFirst(GUEST_CODE_PARAMETER);
-        if (!StringUtils.hasText(guestCode) || parameters.get(GUEST_CODE_PARAMETER).size() != 1) {
-            throw new OAuth2AuthenticationException(OAuth2ErrorCodes.INVALID_REQUEST);
-        }
-
-        String resourceId = parameters.getFirst(RESOURCE_ID_PARAMETER);
-        if (!StringUtils.hasText(resourceId) || parameters.get(RESOURCE_ID_PARAMETER).size() != 1) {
+        String shareCode = parameters.getFirst(SHARE_CODE_PARAMETER);
+        if (!StringUtils.hasText(shareCode) || parameters.get(SHARE_CODE_PARAMETER).size() != 1) {
             throw new OAuth2AuthenticationException(OAuth2ErrorCodes.INVALID_REQUEST);
         }
 
@@ -48,15 +42,14 @@ public class GuestCodeGrantAuthenticationConverter implements AuthenticationConv
         parameters.forEach((key, value) -> {
             if (!key.equals(OAuth2ParameterNames.GRANT_TYPE) &&
                 !key.equals(OAuth2ParameterNames.CLIENT_ID) &&
-                !key.equals(GUEST_CODE_PARAMETER) &&
+                !key.equals(SHARE_CODE_PARAMETER) &&
                 !key.equals(RESOURCE_ID_PARAMETER)) {
                 additionalParameters.put(key, value.get(0));
             }
         });
 
-        return new GuestCodeGrantAuthenticationToken(
-                guestCode, 
-                resourceId,
+        return new ShareCodeGrantAuthenticationToken(
+            shareCode, 
                 clientPrincipal, 
                 additionalParameters
         );

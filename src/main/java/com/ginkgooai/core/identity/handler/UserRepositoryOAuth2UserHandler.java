@@ -1,19 +1,10 @@
 package com.ginkgooai.core.identity.handler;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Consumer;
-
-import com.ginkgooai.core.identity.domain.Role;
+import com.ginkgooai.core.common.enums.Role;
 import com.ginkgooai.core.identity.domain.UserInfo;
 import com.ginkgooai.core.identity.domain.UserSocialConnection;
 import com.ginkgooai.core.identity.domain.UserStatus;
-import com.ginkgooai.core.identity.repository.RoleRepository;
+import com.ginkgooai.core.identity.domain.enums.LoginMethod;
 import com.ginkgooai.core.identity.repository.UserRepository;
 import com.ginkgooai.core.identity.repository.UserSocialConnectionRepository;
 import lombok.Builder;
@@ -27,11 +18,19 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Consumer;
+
 @Slf4j
 @RequiredArgsConstructor
 public class UserRepositoryOAuth2UserHandler implements Consumer<OAuth2User> {
 	private final UserRepository userRepository;
-	private final RoleRepository roleRepository;
 	private final UserSocialConnectionRepository socialConnectionRepository;
 
 	@Override
@@ -135,10 +134,9 @@ public class UserRepositoryOAuth2UserHandler implements Consumer<OAuth2User> {
 		user.setFirstName(userInfo.getFirstName());
 		user.setLastName(userInfo.getLastName());
 		user.setStatus(UserStatus.INACTIVE);
-
-		Role userRole = roleRepository.findByName(Role.ROLE_USER)
-				.orElseThrow(() -> new RuntimeException("Default role not found"));
-		user.setRoles(new HashSet<>(Collections.singletonList(userRole)));
+		user.setLoginMethods(new ArrayList<>());
+		user.getLoginMethods().add(LoginMethod.OAUTH);
+		user.setRoles(Collections.singletonList(Role.ROLE_USER));
 
 		return userRepository.save(user);
 	}

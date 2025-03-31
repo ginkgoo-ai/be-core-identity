@@ -6,7 +6,6 @@ import com.ginkgooai.core.identity.handler.SpaCsrfTokenRequestHandler;
 import com.ginkgooai.core.identity.handler.TokenRevocationLogoutHandler;
 import com.ginkgooai.core.identity.handler.UserRepositoryOAuth2UserHandler;
 import com.ginkgooai.core.identity.repository.DatabaseClientRegistrationRepository;
-import com.ginkgooai.core.identity.repository.RoleRepository;
 import com.ginkgooai.core.identity.repository.UserRepository;
 import com.ginkgooai.core.identity.repository.UserSocialConnectionRepository;
 import com.ginkgooai.core.identity.security.AdminApiKeyFilter;
@@ -60,7 +59,6 @@ import java.util.List;
 public class SecurityConfig {
 
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
     private final UserSocialConnectionRepository socialConnectionRepository;
 
     private final JwtAuthenticationConverter jwtAuthenticationConverter;
@@ -78,7 +76,7 @@ public class SecurityConfig {
 
     @Bean
     public UserRepositoryOAuth2UserHandler oauth2UserHandler() {
-        return new UserRepositoryOAuth2UserHandler(userRepository, roleRepository, socialConnectionRepository);
+        return new UserRepositoryOAuth2UserHandler(userRepository, socialConnectionRepository);
     }
 
     @Bean

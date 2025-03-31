@@ -7,7 +7,7 @@ COPY pom.xml ./
 COPY settings.xml ./
 COPY src ./src
 
-RUN mvn clean install -X -U -s settings.xml && \
+RUN mvn clean install -U -s settings.xml && \
     mvn package -Dmaven.test.skip=true -s settings.xml
 
 FROM openjdk:23-jdk-slim

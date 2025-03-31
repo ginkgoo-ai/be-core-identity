@@ -1,6 +1,5 @@
 package com.ginkgooai.core.identity.controller;
 
-import com.ginkgooai.core.common.enums.Role;
 import com.ginkgooai.core.identity.domain.UserInfo;
 import com.ginkgooai.core.identity.domain.UserStatus;
 import com.ginkgooai.core.identity.domain.enums.LoginMethod;
@@ -43,7 +42,7 @@ public class ShareCodeController {
 				.email(request.guestEmail)
 				.name(request.guestName)
 				.roles(request.roles)
-				.loginMethods(List.of(LoginMethod.TEMP_TOKEN))
+				.loginMethods(List.of(LoginMethod.TEMP_TOKEN.name()))
 				.status(UserStatus.ACTIVE)
 				.build()));
 
@@ -95,7 +94,7 @@ public class ShareCodeController {
 		boolean write,
 		String guestName,
 		String guestEmail,
-		List<Role> roles,
+		List<String> roles,
 		String redirectUrl,
 		int expiryHours,
 		String workspaceId) {

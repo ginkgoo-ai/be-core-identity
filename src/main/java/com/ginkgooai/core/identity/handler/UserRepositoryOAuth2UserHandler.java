@@ -135,8 +135,8 @@ public class UserRepositoryOAuth2UserHandler implements Consumer<OAuth2User> {
 		user.setLastName(userInfo.getLastName());
 		user.setStatus(UserStatus.INACTIVE);
 		user.setLoginMethods(new ArrayList<>());
-		user.getLoginMethods().add(LoginMethod.OAUTH);
-		user.setRoles(Collections.singletonList(Role.ROLE_USER));
+		user.getLoginMethods().add(LoginMethod.OAUTH.name());
+		user.setRoles(Collections.singletonList(Role.ROLE_USER.name()));
 
 		return userRepository.save(user);
 	}

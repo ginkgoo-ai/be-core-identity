@@ -1,6 +1,5 @@
 package com.ginkgooai.core.identity.dto;
 
-import com.ginkgooai.core.common.enums.Role;
 import com.ginkgooai.core.identity.domain.UserInfo;
 import com.ginkgooai.core.identity.domain.UserStatus;
 import lombok.Getter;
@@ -23,7 +22,7 @@ public class UserInfoAuthentication implements UserDetails {
     private String firstName;
     private String lastName;
     private UserStatus status;
-    private List<Role> roles = new ArrayList<>();
+    private List<String> roles = new ArrayList<>();
 
     public static UserInfoAuthentication from(UserInfo userInfo) {
         UserInfoAuthentication auth = new UserInfoAuthentication();
@@ -40,7 +39,7 @@ public class UserInfoAuthentication implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream()
-            .map(role -> new SimpleGrantedAuthority(role.name()))
+            .map(role -> new SimpleGrantedAuthority(role))
             .collect(Collectors.toList());
     }
 

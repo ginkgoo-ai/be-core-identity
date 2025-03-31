@@ -1,14 +1,11 @@
 package com.ginkgooai.core.identity.dto.response;
 
-import com.ginkgooai.core.common.enums.Role;
 import com.ginkgooai.core.identity.domain.UserInfo;
-import com.ginkgooai.core.identity.domain.enums.LoginMethod;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Data
 @Builder
@@ -56,8 +53,8 @@ public class UserResponse {
 			.lastName(user.getLastName())
 			.name(user.getName())
 			.picture(user.getPicture())
-			.roles(user.getRoles().stream().map(Role::name).collect(Collectors.toList()))
-			.loginMethods(user.getLoginMethods().stream().map(LoginMethod::name).collect(Collectors.toList()))
+			.roles(user.getRoles())
+			.loginMethods(user.getLoginMethods())
 			.enabled(user.isEnabled())
 			.build();
 	}

@@ -1,12 +1,11 @@
 package com.ginkgooai.core.identity.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.ginkgooai.core.common.enums.Role;
-import com.ginkgooai.core.identity.domain.enums.LoginMethod;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.*;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -39,9 +38,9 @@ public class UserInfo extends BaseAuditableEntity implements UserDetails {
     @JsonIgnore
     private String password;
 
-    @Type(LoginMethodArrayType.class)
+    @JdbcTypeCode(SqlTypes.ARRAY)
     @Column(name = "login_methods", columnDefinition = "varchar[]")
-    private List<LoginMethod> loginMethods;
+    private List<String> loginMethods;
 
     @Column(name = "first_name", length = 100)
     private String firstName;
@@ -62,9 +61,9 @@ public class UserInfo extends BaseAuditableEntity implements UserDetails {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserSocialConnection> socialConnections = new HashSet<>();
 
-    @Type(RoleArrayType.class)
+    @JdbcTypeCode(SqlTypes.ARRAY)
     @Column(name = "roles", columnDefinition = "varchar[]")
-    private List<Role> roles;
+    private List<String> roles;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<MfaInfo> mfaInfos = new HashSet<>();
@@ -123,7 +122,7 @@ public class UserInfo extends BaseAuditableEntity implements UserDetails {
         }
 
         return roles.stream()
-            .map(role -> new SimpleGrantedAuthority(role.name()))
+            .map(role -> new SimpleGrantedAuthority(role))
             .collect(Collectors.toList());
     }
 

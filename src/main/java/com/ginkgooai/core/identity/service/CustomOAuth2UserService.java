@@ -138,7 +138,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 newUser.setFirstName(firstName);
                 newUser.setLastName(lastName);
                 newUser.setRoles(new ArrayList<>());
-                newUser.getRoles().add(Role.ROLE_USER);
+                newUser.getRoles().add(Role.ROLE_USER.name());
 
                 return newUser;
             });

@@ -80,7 +80,7 @@ public class UserService {
         user.setRoles(new ArrayList<>());
 
         // Add default USER role
-        user.getRoles().add(Role.ROLE_USER);
+        user.getRoles().add(Role.ROLE_USER.name());
 
         UserInfo savedUser = userRepository.save(user);
         log.info("Successfully created user with email: {}", request.getEmail());
@@ -107,9 +107,9 @@ public class UserService {
         user.setName(request.getName());
         user.setStatus(UserStatus.ACTIVE);
         user.setRoles(new ArrayList<>());
-        user.getRoles().add(Role.ROLE_USER);
+        user.getRoles().add(Role.ROLE_USER.name());
         user.setLoginMethods(new ArrayList<>());
-        user.getLoginMethods().add(LoginMethod.TEMP_TOKEN);
+        user.getLoginMethods().add(LoginMethod.TEMP_TOKEN.name());
 
         UserInfo savedUser = userRepository.save(user);
         log.info("Successfully created user with email: {}", request.getEmail());

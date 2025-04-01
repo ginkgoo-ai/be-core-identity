@@ -83,6 +83,12 @@ public class ShareCodeService {
         return codeInfo;
     }
 
+	public void revokeShareCode(String shareCode) {
+		// Delete the share code from Redis
+		String redisKey = REDIS_KEY_PREFIX + shareCode;
+		redisTemplate.delete(redisKey);
+	}
+
     /**
      * Guest code information record.
      */

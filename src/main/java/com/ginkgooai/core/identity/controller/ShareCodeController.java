@@ -88,6 +88,13 @@ public class ShareCodeController {
 		}
 	}
 
+	@DeleteMapping("/{shareCode}")
+	public ResponseEntity<Void> revokeShareCode(@PathVariable String shareCode) {
+		shareCodeService.revokeShareCode(shareCode);
+
+		return ResponseEntity.ok().build();
+	}
+
 	public record ShareCodeRequest(
 		String resource,
 		String resourceId,

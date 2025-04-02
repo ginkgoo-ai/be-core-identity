@@ -1,9 +1,11 @@
 package com.ginkgooai.core.identity.controller;
 
+import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.identity.domain.UserInfo;
 import com.ginkgooai.core.identity.dto.request.*;
 import com.ginkgooai.core.identity.dto.response.UserResponse;
 import com.ginkgooai.core.identity.exception.InvalidVerificationCodeException;
+import com.ginkgooai.core.identity.service.ShareCodeService;
 import com.ginkgooai.core.identity.service.UserService;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,8 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,11 +38,21 @@ public class UserInfoController {
 
     private final UserService userService;
 
+    private final ShareCodeService shareCodeService;
+
     @GetMapping("/me")
     @Operation(summary = "Get user info", description = "MVP:Retrieve information about the currently authenticated user")
-    public ResponseEntity<UserResponse> getUserInfo(@AuthenticationPrincipal Jwt jwt) {
-        log.debug("Retrieving info for user: {}", jwt.getSubject());
-        UserInfo userInfo = userService.getUserById(jwt.getSubject());
+    public ResponseEntity<UserResponse> getCurrentUserInfo(@RequestParam(required = false) String shareCode) {
+        UserInfo userInfo;
+        if (shareCode != null) {
+            log.info("Retrieving info for user with share code: {}", shareCode);
+            ShareCodeService.ShareCodeInfo shareCodeInfo = shareCodeService.validateShareCode(shareCode);
+            userInfo = userService.getUserById(shareCodeInfo.userId());
+        } else {
+            log.debug("Retrieving info for user: {}", ContextUtils.getUserId());
+            userInfo = userService.getUserById(ContextUtils.getUserId());
+        }
+        
         return ResponseEntity.ok(UserResponse.from(userInfo));
     }
 

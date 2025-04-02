@@ -25,7 +25,6 @@ import org.springframework.security.web.savedrequest.DefaultSavedRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.MultiValueMap;
-import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.ArrayList;
@@ -37,14 +36,13 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserService {
 
+    static final String SAVED_REQUEST = "SPRING_SECURITY_SAVED_REQUEST";
     private final UserRepository userRepository;
-//    private final OAuth2RegisteredClientRepository clientRepository;
+    //    private final OAuth2RegisteredClientRepository clientRepository;
     private final VerificationCodeService verificationCodeService;
     private final EmailVerificationStrategyFactory strategyFactory;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
-    static final String SAVED_REQUEST = "SPRING_SECURITY_SAVED_REQUEST";
-
     @Value("${app.verification.strategy}")
     private VerificationStrategy defaultStrategy;
 
@@ -128,10 +126,10 @@ public class UserService {
                 String queryString = savedRequest.getQueryString();
                 if (queryString != null) {
                     MultiValueMap<String, String> parameters =
-                            UriComponentsBuilder.newInstance()
-                                    .query(queryString)
-                                    .build()
-                                    .getQueryParams();
+                        UriComponentsBuilder.newInstance()
+                            .query(queryString)
+                            .build()
+                            .getQueryParams();
                     return parameters.getFirst(sessionKey);
                 }
             }
@@ -144,21 +142,21 @@ public class UserService {
     public UserResponse loadUser(String email) {
         log.debug("Retrieving user by email: {}", email);
         return UserResponse.from(userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email)));
+            .orElseThrow(() -> new ResourceNotFoundException("User", "email", email)));
     }
 
     public UserInfo getUserById(String userId) {
         log.debug("Retrieving user by ID: {}", userId);
         return userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "ID", userId));
+            .orElseThrow(() -> new ResourceNotFoundException("User", "ID", userId));
     }
 
     public List<UserResponse> getUsersByIds(List<String> userIds) {
         log.debug("Retrieving users by IDs: {}", userIds);
         List<UserInfo> users = userRepository.findAllById(userIds);
         return users.stream()
-                .map(UserResponse::from)
-                .collect(Collectors.toList());
+            .map(UserResponse::from)
+            .collect(Collectors.toList());
     }
 
     /**
@@ -170,7 +168,7 @@ public class UserService {
         TokenIdentity tokenIdentity = verificationCodeService.verifyEmailToken(token);
 
         UserInfo user = userRepository.findById(tokenIdentity.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", tokenIdentity.getUserId()));
+            .orElseThrow(() -> new ResourceNotFoundException("User", "id", tokenIdentity.getUserId()));
 
         if (user.isEmailVerified()) {
             log.info("Email already verified for user ID: {}", tokenIdentity.getUserId());
@@ -180,7 +178,7 @@ public class UserService {
         user.setStatus(UserStatus.ACTIVE);
         userRepository.save(user);
         log.info("Successfully verified email for user ID: {}", tokenIdentity.getUserId());
-        
+
         return tokenIdentity;
     }
 
@@ -189,7 +187,7 @@ public class UserService {
         log.debug("Verifying email for user ID: {}", userId);
 
         UserInfo user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+            .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
         if (user.isEmailVerified()) {
             log.info("Email already verified for user ID: {}", userId);
@@ -199,7 +197,7 @@ public class UserService {
         if (!verificationCodeService.verifyCode(userId, verificationCode)) {
             log.warn("Invalid verification code provided for user ID: {}", userId);
             throw new InvalidVerificationCodeException(
-                    String.format("Invalid or expired verification code for user ID: %s", userId)
+                String.format("Invalid or expired verification code for user ID: %s", userId)
             );
         }
 
@@ -213,12 +211,12 @@ public class UserService {
         log.debug("Regenerating verification token for user ID: {}", userId);
 
         UserInfo user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+            .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
         if (user.isEmailVerified()) {
             log.warn("Attempted to regenerate verification code for already verified user: {}", userId);
             throw new EmailAlreadyVerifiedException(
-                    String.format("Email already verified for user ID: %s", userId)
+                String.format("Email already verified for user ID: %s", userId)
             );
         }
 
@@ -229,7 +227,7 @@ public class UserService {
 
     public void updatePassword(String userId, String oldPassword, String newPassword) {
         UserInfo user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+            .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
         if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
             throw new InvalidPasswordException("Invalid old password");
@@ -244,7 +242,7 @@ public class UserService {
         log.debug("Initiating password reset for email: {}", email);
 
         UserInfo user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
+            .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
 
         String resetToken = verificationCodeService.generatePasswordResetToken(user.getId());
         log.info("Generated password reset token for user ID: {}", user.getId());
@@ -253,7 +251,7 @@ public class UserService {
     }
 
     @Transactional
-    public void confirmPasswordReset(String resetToken, String newPassword) throws InvalidVerificationCodeException{
+    public void confirmPasswordReset(String resetToken, String newPassword) throws InvalidVerificationCodeException {
         log.debug("Confirming password reset with token");
 
         // Extract user ID from token or maintain token-userId mapping
@@ -265,7 +263,7 @@ public class UserService {
         }
 
         UserInfo user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+            .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
@@ -280,28 +278,22 @@ public class UserService {
     public void patchUserInfo(@NotBlank String userId, String pictureUrl, String name) {
 
         UserInfo user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+            .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
 
         UserInfo updatedUser = UserInfo.builder()
-                .id(userId)
-                .picture(pictureUrl)
-                .name(name)
-                .build();
+            .id(userId)
+            .picture(pictureUrl)
+            .name(name)
+            .status(UserStatus.ACTIVE)
+            .build();
 
         userRepository.updateSelective(updatedUser);
-
-    }
-
-    private String processField(String newValue, String currentValue) {
-        if (StringUtils.hasText(newValue) && (!newValue.equals(currentValue))) {
-                return newValue;
-        }
-        return currentValue;
     }
 
     /**
      * Find user by dynamic criteria using JPA Specification
+     *
      * @param email Query specification
      * @return Matched user entity
      * @throws ResourceNotFoundException when no user found
@@ -315,7 +307,7 @@ public class UserService {
         }
 
         return userRepository.findOne(spec)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "criteria", ""));
+            .orElseThrow(() -> new ResourceNotFoundException("User", "criteria", ""));
     }
 
 }

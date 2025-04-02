@@ -1,6 +1,7 @@
 package com.ginkgooai.core.identity.controller;
 
 import com.ginkgooai.core.common.utils.ContextUtils;
+import com.ginkgooai.core.identity.aop.GuestAccessDenied;
 import com.ginkgooai.core.identity.domain.UserInfo;
 import com.ginkgooai.core.identity.dto.request.*;
 import com.ginkgooai.core.identity.dto.response.UserResponse;
@@ -42,16 +43,10 @@ public class UserInfoController {
 
     @GetMapping("/me")
     @Operation(summary = "Get user info", description = "MVP:Retrieve information about the currently authenticated user")
-    public ResponseEntity<UserResponse> getCurrentUserInfo(@RequestParam(required = false) String shareCode) {
-        UserInfo userInfo;
-        if (shareCode != null) {
-            log.info("Retrieving info for user with share code: {}", shareCode);
-            ShareCodeService.ShareCodeInfo shareCodeInfo = shareCodeService.validateShareCode(shareCode);
-            userInfo = userService.getUserById(shareCodeInfo.userId());
-        } else {
-            log.debug("Retrieving info for user: {}", ContextUtils.getUserId());
-            userInfo = userService.getUserById(ContextUtils.getUserId());
-        }
+    @GuestAccessDenied(message = "Guest users cannot access user details")
+    public ResponseEntity<UserResponse> getCurrentUserInfo() {
+        log.debug("Retrieving info for user: {}", ContextUtils.getUserId());
+        UserInfo userInfo = userService.getUserById(ContextUtils.getUserId());
         
         return ResponseEntity.ok(UserResponse.from(userInfo));
     }

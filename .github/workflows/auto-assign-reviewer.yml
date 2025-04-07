@@ -1,0 +1,45 @@
+name: Assign reviewers
+
+on:
+  pull_request:
+    types: [opened,reopened]
+
+jobs:
+  auto-assign-reviewers:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJSON(github) }}
+        run: |
+          echo "GITHUB_CONTEXT is: $GITHUB_CONTEXT"
+          echo "github.event.pull_request.number: ${{ github.event.pull_request.number }}"
+
+      - name: Add PR Team Reviewers
+        run: |
+          if [[ -n $(echo ${{github.repository}} | awk -F '/' '{print $2}' | grep '^be-') ]]; then
+            reviewer_team="backend"
+          elif [[ -n $(echo ${{github.repository}} | awk -F '/' '{print $2}' | grep '^fe-') ]]; then
+            reviewer_team="frontend"
+          else
+            reviewer_team="management"
+          fi
+
+          curl -L -s \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.MANAGE_PR_PAT }}" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/requested_reviewers" \
+            -d "{\"team_reviewers\":[\"$reviewer_team\"]}"
+
+      - name: Add PR Assignees
+        run: |
+          curl -L -s \
+              -X POST \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer ${{ secrets.MANAGE_PR_PAT }}" \
+              "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/assignees" \
+              -d '{"assignees":["${{ github.actor }}"]}'

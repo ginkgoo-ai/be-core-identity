@@ -212,7 +212,7 @@ public class UserInfoController {
             PatchUserRequest request) {
         log.debug("Patch user info for user ID: {}", userId);
 
-        userService.patchUserInfo(userId, request.getPictureUrl(), request.getName());
+        userService.patchUserInfo(userId, request.getPictureUrl(), request.getFirstName(), request.getLastName());
 
         log.info("Patch user info for user ID: {}", userId);
         return ResponseEntity.ok().build();

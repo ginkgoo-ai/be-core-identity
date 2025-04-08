@@ -40,7 +40,8 @@ public class ShareCodeController {
 		UserInfo user = userRepository.findByEmail(request.guestEmail()).orElseGet(() ->
 			userRepository.save(UserInfo.builder()
 				.email(request.guestEmail)
-				.name(request.guestName)
+				.firstName(request.guestName.split(" ")[0])
+				.lastName(request.guestName.split(" ")[1])
 				.roles(request.roles)
 				.loginMethods(List.of(LoginMethod.TEMP_TOKEN.name()))
 				.status(UserStatus.ACTIVE)

@@ -102,7 +102,8 @@ public class UserService {
 
         UserInfo user = new UserInfo();
         user.setEmail(request.getEmail());
-        user.setName(request.getName());
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
         user.setStatus(UserStatus.ACTIVE);
         user.setRoles(new ArrayList<>());
         user.getRoles().add(Role.ROLE_USER.name());
@@ -275,16 +276,16 @@ public class UserService {
     }
 
     @Transactional
-    public void patchUserInfo(@NotBlank String userId, String pictureUrl, String name) {
+    public void patchUserInfo(@NotBlank String userId, String pictureUrl, String fistName, String lastName) {
 
         UserInfo user = userRepository.findById(userId)
             .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
-
         UserInfo updatedUser = UserInfo.builder()
             .id(userId)
             .picture(pictureUrl)
-            .name(name)
+            .firstName(fistName)
+            .lastName(lastName)
             .status(UserStatus.ACTIVE)
             .build();
 

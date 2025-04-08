@@ -21,13 +21,12 @@ public class PatchUserRequest {
     )
     private String pictureUrl;
 
-    @Schema(
-            title = "Name",
-            description = "User's name",
-            example = "John",
-            requiredMode = Schema.RequiredMode.REQUIRED
-    )
-    @NotBlank(message = "Name is required")
-    private String name;
+    @Schema(description = "User's first name")
+    @NotBlank(message = "First name is required")
+    private String firstName;
+
+    @Schema(description = "User's last name")
+    @NotBlank(message = "Last name is required")
+    private String lastName;
 
 }

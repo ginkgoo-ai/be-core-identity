@@ -156,4 +156,8 @@ public class UserInfo extends BaseAuditableEntity implements UserDetails {
     public String getPassword() {
         return password;
     }
+
+    public String getName() {
+        return String.join(" ", firstName, lastName);
+    }
 }

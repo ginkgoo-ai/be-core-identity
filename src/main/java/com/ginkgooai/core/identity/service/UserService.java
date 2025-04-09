@@ -276,20 +276,20 @@ public class UserService {
     }
 
     @Transactional
-    public void patchUserInfo(@NotBlank String userId, String pictureUrl, String fistName, String lastName) {
+    public UserResponse patchUserInfo(@NotBlank String userId, String pictureUrl, String fistName, String lastName) {
 
         UserInfo user = userRepository.findById(userId)
             .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
-        UserInfo updatedUser = UserInfo.builder()
-            .id(userId)
-            .picture(pictureUrl)
-            .firstName(fistName)
-            .lastName(lastName)
-            .status(UserStatus.ACTIVE)
-            .build();
+        user.setPassword(pictureUrl);
+        user.setFirstName(fistName);
+        user.setLastName(lastName);
+        ;
+        user.setStatus(UserStatus.ACTIVE);
 
-        userRepository.updateSelective(updatedUser);
+        userRepository.updateSelective(user);
+
+        return UserResponse.from(user);
     }
 
     /**

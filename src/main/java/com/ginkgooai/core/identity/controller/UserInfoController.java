@@ -206,16 +206,16 @@ public class UserInfoController {
             @ApiResponse(responseCode = "404", description = "User not found",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
-    public ResponseEntity<Void> patchUserInfo(
+    public ResponseEntity<UserResponse> patchUserInfo(
             @PathVariable @NotBlank String userId,
             @RequestBody @Valid @Parameter(description = "Patch user info request details", required = true)
             PatchUserRequest request) {
         log.debug("Patch user info for user ID: {}", userId);
 
-        userService.patchUserInfo(userId, request.getPictureUrl(), request.getFirstName(), request.getLastName());
+        UserResponse userResponse = userService.patchUserInfo(userId, request.getPictureUrl(), request.getFirstName(), request.getLastName());
 
         log.info("Patch user info for user ID: {}", userId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
     }
 
 

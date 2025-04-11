@@ -154,6 +154,9 @@ public class UserService {
 
     public List<UserResponse> getUsersByIds(List<String> userIds) {
         log.debug("Retrieving users by IDs: {}", userIds);
+        if (userIds == null || userIds.isEmpty()) {
+            return new ArrayList<>();
+        }
         List<UserInfo> users = userRepository.findAllById(userIds);
         return users.stream()
             .map(UserResponse::from)

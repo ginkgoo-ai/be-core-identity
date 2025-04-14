@@ -76,7 +76,7 @@ management:
 
 app:
   domain-name: ${APP_DOMAIN}
-  dev-uris: ${DEV_SLATE_URI}
+  dev-uris: ${DEV_APP_URI}
   jwt:
   auth-server-uri: ${AUTH_SERVER}
   verification:
@@ -104,7 +104,7 @@ security:
     allowed-origins:
       - ${core-gateway-uri}
       - ${AUTH_CLIENT}
-      - ${SLATE_URI}
+      - ${APP_URI}
 
 springdoc:
   api-docs:

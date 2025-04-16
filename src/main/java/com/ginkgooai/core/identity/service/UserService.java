@@ -284,10 +284,9 @@ public class UserService {
         UserInfo user = userRepository.findById(userId)
             .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
-        user.setPassword(pictureUrl);
+		user.setPicture(pictureUrl);
         user.setFirstName(fistName);
         user.setLastName(lastName);
-        ;
         user.setStatus(UserStatus.ACTIVE);
 
         userRepository.updateSelective(user);

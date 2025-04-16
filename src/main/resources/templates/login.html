@@ -96,24 +96,11 @@
                 </div>
             </div>
 
-            <!-- Terms and Privacy -->
-            <div class="mt-12">
-                <p class="text-center text-sm text-gray-500">
-                    By continuing, you agree to our
-                    <a href="/terms" class="text-slate-primary hover:text-slate-secondary font-medium transition-colors">Terms of Service</a> and
-                    <a href="/privacy" class="text-slate-primary hover:text-slate-secondary font-medium transition-colors">Privacy Policy</a>
-                </p>
-
-                <p class="mt-2 text-center text-sm text-gray-500">
-                    Need help? <a href="/help" class="text-slate-primary hover:text-slate-secondary font-medium transition-colors">Contact Support</a>
-                </p>
-            </div>
         </div>
     </div>
 </div>
 
 <script>
-  // 添加错误消息自动消失功能
   if (document.querySelector('[th\\:if="${param.error}"]')) {
     setTimeout(() => {
       const errorDiv = document.querySelector('[th\\:if="${param.error}"]');

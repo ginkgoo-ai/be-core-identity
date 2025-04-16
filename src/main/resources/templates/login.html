@@ -44,13 +44,13 @@
     </style>
 </head>
 <body class="min-h-screen bg-white">
-<div class="flex min-h-screen">
+<div class="flex h-screen">
     <!-- Left Side - Image -->
     <div class="hidden lg:block lg:w-1/2 relative p-8">
         <div class="w-full h-full rounded-3xl overflow-hidden">
             <img th:src="@{/static/images/clapperboard.png}"
-                 alt="Login visual"
-                 class="object-cover w-full h-full">
+                alt="Login visual"
+                class="object-cover w-full h-full">
         </div>
     </div>
 
@@ -60,7 +60,7 @@
         <div class="max-w-md w-full mx-auto">
             <!-- Logo -->
             <div class="flex justify-center mb-8">
-                <img th:src="@{/static/images/logo.png}" alt="slate" class="h-8">
+                <img th:src="@{/static/images/logo.png}" alt="slate" class="h-10">
             </div>
 
             <!-- Welcome Text -->
@@ -73,7 +73,7 @@
 
             <!-- Google Sign In Button -->
             <a href="/oauth2/authorization/google"
-               class="google-btn gradient-border flex items-center justify-center w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm bg-white hover:bg-gray-50 transition-colors mb-4 group">
+               class="google-btn gradient-border flex items-center justify-center w-full px-4 py-3 border border-gray-300 rounded-full shadow-sm bg-white hover:bg-gray-50 transition-colors mb-4 group">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
                      alt="Google logo"
                      class="w-5 h-5 mr-3">
@@ -104,7 +104,7 @@
                     <a href="/privacy" class="text-slate-primary hover:text-slate-secondary font-medium transition-colors">Privacy Policy</a>
                 </p>
 
-                <p class="mt-4 text-center text-sm text-gray-500">
+                <p class="mt-2 text-center text-sm text-gray-500">
                     Need help? <a href="/help" class="text-slate-primary hover:text-slate-secondary font-medium transition-colors">Contact Support</a>
                 </p>
             </div>

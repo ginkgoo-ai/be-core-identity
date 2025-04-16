@@ -128,15 +128,12 @@ public class SecurityConfig {
     @Order(2)
     public SecurityFilterChain adminApiSecurityFilterChain(HttpSecurity http) throws Exception {
         return configureResourceServer(http)
-                .securityMatcher("/admin/oauth2/**")
-                .cors(cors -> Customizer.withDefaults())
-                .csrf(csrf -> csrf
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                        .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
-                )
+			.securityMatcher("/admin/**")
+			.cors(Customizer.withDefaults())
+			.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(HttpMethod.OPTIONS).permitAll()
-                        .anyRequest().hasRole("ADMIN")
+				.requestMatchers("/admin/**")
+				.permitAll()
                 )
                 .anonymous(anonymous -> anonymous.disable())
                 .sessionManagement(session -> session

@@ -313,4 +313,26 @@ public class UserService {
             .orElseThrow(() -> new ResourceNotFoundException("User", "criteria", ""));
     }
 
+	/**
+	 * Activate or deactivate a user
+	 * @param userId The user ID
+	 * @param active Whether to activate or deactivate
+	 * @return Updated user info
+	 */
+	@Transactional
+	public UserResponse toggleUserActivation(String userId, boolean active) {
+		log.debug("Toggling user activation status for user ID: {}, active: {}", userId, active);
+
+		UserInfo user = userRepository.findById(userId)
+			.orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+
+		UserStatus newStatus = active ? UserStatus.ACTIVE : UserStatus.INACTIVE;
+		user.setStatus(newStatus);
+
+		UserInfo savedUser = userRepository.save(user);
+		log.info("User activation status updated for user ID: {}, new status: {}", userId, newStatus);
+
+		return UserResponse.from(savedUser);
+	}
+
 }

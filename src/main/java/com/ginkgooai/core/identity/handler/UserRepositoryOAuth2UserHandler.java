@@ -142,15 +142,7 @@ public class UserRepositoryOAuth2UserHandler implements Consumer<OAuth2User> {
 	}
 
 	private void updateUserInfo(UserInfo user, SocialUserInfo userInfo) {
-		if (userInfo.getFirstName() != null) {
-			user.setFirstName(userInfo.getFirstName());
-		}
-		if (userInfo.getLastName() != null) {
-			user.setLastName(userInfo.getLastName());
-		}
-		if (userInfo.getPicture() != null) {
-			user.setPicture(userInfo.getPicture());
-		}
+		// update user info from social account
 	}
 
 	private void updateSocialConnection(UserSocialConnection connection, SocialUserInfo userInfo) {

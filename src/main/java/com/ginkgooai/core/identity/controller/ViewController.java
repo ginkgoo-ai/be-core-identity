@@ -35,6 +35,9 @@ public class ViewController {
     @Value("${AUTH_CLIENT}")
     private String coreGatewayUri;
 
+	@Value("${app.name:slate}")
+	private String appName;
+
     @Autowired
     private UserService userService;
 
@@ -60,6 +63,7 @@ public class ViewController {
 
     @GetMapping("/login")
     public String loginPage(Model model) {
+		model.addAttribute("appName", appName);
         return "login";
     }
 

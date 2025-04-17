@@ -48,9 +48,9 @@
     <!-- Left Side - Image -->
     <div class="hidden lg:block lg:w-1/2 relative p-8">
         <div class="w-full h-full rounded-3xl overflow-hidden">
-            <img th:src="@{/static/images/clapperboard.png}"
-                alt="Login visual"
-                class="object-cover w-full h-full">
+            <img th:src="@{'/static/images/' + ${appName != null ? appName : 'slate'} + '-clapperboard.png'}"
+                 alt="Login visual"
+                 class="object-cover w-full h-full">
         </div>
     </div>
 
@@ -60,7 +60,8 @@
         <div class="max-w-md w-full mx-auto">
             <!-- Logo -->
             <div class="flex justify-center mb-8">
-                <img th:src="@{/static/images/logo.png}" alt="slate" class="h-10">
+                <img th:src="@{'/static/images/' + ${appName != null ? appName : 'slate'} + '-logo.png'}"
+                     th:alt="${appName != null ? appName : 'slate'}" class="h-10">
             </div>
 
             <!-- Welcome Text -->

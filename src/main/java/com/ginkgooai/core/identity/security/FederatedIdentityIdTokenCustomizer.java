@@ -40,6 +40,7 @@ public final class FederatedIdentityIdTokenCustomizer implements OAuth2TokenCust
 				existingClaims.put("name", localUser.getName());
 				existingClaims.put("email", email);
 				existingClaims.put("role", localUser.getRoles());
+				existingClaims.put("enabled", localUser.isEnabled());
 				if (claims.get("workspace_id") != null) {
 					existingClaims.put("workspace_id", claims.get("workspace_id"));
 				}

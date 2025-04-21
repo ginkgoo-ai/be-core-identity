@@ -68,7 +68,7 @@
         <dependency>
             <groupId>com.ginkgooai</groupId>
             <artifactId>be-core-common</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
         <!-- Redis -->

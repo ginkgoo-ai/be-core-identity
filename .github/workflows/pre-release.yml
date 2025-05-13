@@ -1,9 +1,14 @@
 # Deploy to Railway staging environment after creating a pre-release on Github
-name: Deploy to Railway - staging environment
+name: Deploy to Railway Staging Environment
 
 on: 
+  workflow_dispatch:
   release: 
     types: [published]
+
+permissions:
+  contents: read
+  packages: read
 
 jobs:
   get-some-vars:
@@ -24,22 +29,22 @@ jobs:
           echo "repo_name=$repo_name" >> $GITHUB_OUTPUT
         shell: bash
 
-
   deploy-to-railway:
-    name: Deploy to Railway - staging environment
-    runs-on: ubuntu-latest
+    name: Deploying ${{matrix.service_name }}
     needs: get-some-vars
-    env:
+    strategy:
+      fail-fast: false
+      matrix:
+        service_name: 
+          - ${{ needs.get-some-vars.outputs.repo_name }}
+        railway_environment: 
+          - "slate-staging"
+          - "jasper-staging"
+          - "legal-staging"
+    uses: ginkgoo-ai/do-actions/.github/workflows/deploy-to-railway.yml@main
+    with:
+      service_name: ${{ needs.get-some-vars.outputs.repo_name }}
+      railway_environment: ${{ matrix.railway_environment }}
+    secrets:
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-      RAILWAY_SERVICE_NAME: ${{ needs.get-some-vars.outputs.repo_name }}
-    container: ghcr.io/railwayapp/cli:latest     
-    steps:
-      - name: Checkout Self
-        uses: actions/checkout@v4
-
-      - name: deploy to railway environment - staging
-        run: |
-          railway up --service=${{ env.RAILWAY_SERVICE_NAME }}
-
-
 

@@ -43,7 +43,7 @@ jobs:
           - "legal-staging"
     uses: ginkgoo-ai/do-actions/.github/workflows/deploy-to-railway.yml@main
     with:
-      service_name: ${{ needs.get-some-vars.outputs.repo_name }}
+      service_name: ${{ matrix.service_name }}
       railway_environment: ${{ matrix.railway_environment }}
     secrets:
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}

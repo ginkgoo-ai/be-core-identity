@@ -2,7 +2,6 @@ package com.ginkgooai.core.identity.config.security;
 
 import com.ginkgooai.core.identity.filter.MfaAuthenticationFilter;
 import com.ginkgooai.core.identity.handler.FederatedIdentityAuthenticationSuccessHandler;
-import com.ginkgooai.core.identity.handler.SpaCsrfTokenRequestHandler;
 import com.ginkgooai.core.identity.handler.TokenRevocationLogoutHandler;
 import com.ginkgooai.core.identity.handler.UserRepositoryOAuth2UserHandler;
 import com.ginkgooai.core.identity.repository.DatabaseClientRegistrationRepository;
@@ -173,8 +172,7 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                        .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
-                        .ignoringRequestMatchers("/login", "/oauth2/authorize")
+				.ignoringRequestMatchers("/oauth2/authorize")
                 )
                 .authorizeHttpRequests(authorize -> authorize
                         //View endpoint
@@ -229,8 +227,11 @@ public class SecurityConfig {
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
+				.loginProcessingUrl("/login")
                         .usernameParameter("email")
                         .passwordParameter("password")
+				.defaultSuccessUrl("/", true)
+				.failureUrl("/login?error=true")
                         .permitAll()
                 )
                 .addFilterBefore(mfaAuthenticationFilter,  UsernamePasswordAuthenticationFilter.class)

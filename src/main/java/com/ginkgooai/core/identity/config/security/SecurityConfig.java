@@ -165,6 +165,7 @@ public class SecurityConfig {
                 ).build();
     }
 
+
     @Bean
     @Order(3)
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http, TokenRevocationLogoutHandler tokenRevocationLogoutHandler) throws Exception {
@@ -176,7 +177,8 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(authorize -> authorize
                         //View endpoint
-                        .requestMatchers("/static/**", "/static/images/**").permitAll()
+				.requestMatchers("/static/**", "/static/images/**", "/.well-known/**")
+				.permitAll()
                         //OAuth2 endpoints
                         .requestMatchers("/oauth2/authorize",
 //                                "oauth2/consent",
@@ -230,10 +232,10 @@ public class SecurityConfig {
 				.loginProcessingUrl("/login")
                         .usernameParameter("email")
                         .passwordParameter("password")
-				.defaultSuccessUrl("/", true)
 				.failureUrl("/login?error=true")
                         .permitAll()
                 )
+			.rememberMe(Customizer.withDefaults())
                 .addFilterBefore(mfaAuthenticationFilter,  UsernamePasswordAuthenticationFilter.class)
                 .logout(logout -> logout
                         .logoutUrl("/logout")

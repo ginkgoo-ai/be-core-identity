@@ -72,6 +72,59 @@
                 Sign in to continue to your account
             </p>
 
+            <!-- Email/Password Login Form -->
+            <form action="/login" method="POST" class="space-y-4 mb-6">
+                <!-- Email Field -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email address</label>
+                    <input id="email"
+                           name="email"
+                           type="email"
+                           autocomplete="email"
+                           required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-full shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200">
+                </div>
+
+                <!-- Password Field -->
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input id="password"
+                           name="password"
+                           type="password"
+                           autocomplete="current-password"
+                           required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-full shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200">
+                </div>
+
+                <!-- Remember Me -->
+                <div class="flex items-center">
+                    <input id="remember-me"
+                           name="remember-me"
+                           type="checkbox"
+                           class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                    <label for="remember-me" class="ml-2 text-sm text-gray-600">Remember me</label>
+                </div>
+
+                <!-- CSRF Token -->
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                <!-- Sign In Button -->
+                <button type="submit"
+                        class="w-full bg-gradient-primary text-white font-medium py-3 px-4 rounded-full hover:opacity-90 transition-opacity duration-200 shadow-lg">
+                    Sign In
+                </button>
+            </form>
+
+            <!-- Divider -->
+            <div class="relative mb-6">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-2 bg-white text-gray-500">or</span>
+                </div>
+            </div>
+
             <!-- Google Sign In Button -->
             <a href="/oauth2/authorization/google"
                class="google-btn gradient-border flex items-center justify-center w-full px-4 py-3 border border-gray-300 rounded-full shadow-sm bg-white hover:bg-gray-50 transition-colors mb-4 group">

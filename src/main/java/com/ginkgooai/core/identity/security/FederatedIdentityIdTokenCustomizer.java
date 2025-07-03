@@ -2,7 +2,9 @@ package com.ginkgooai.core.identity.security;
 
 import com.ginkgooai.core.identity.dto.response.UserResponse;
 import com.ginkgooai.core.identity.service.UserService;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -32,9 +34,22 @@ public final class FederatedIdentityIdTokenCustomizer implements OAuth2TokenCust
 			OAuth2TokenType.ACCESS_TOKEN.getValue().equals(context.getTokenType().getValue())) {
 
 			Map<String, Object> claims = extractClaims(context.getPrincipal());
-			String email = claims.get("email").toString();
+
+			// Safe email extraction with null check
+			final String email;
+			if (claims.containsKey("email") && claims.get("email") != null) {
+				email = claims.get("email").toString();
+			}
+			else {
+				// Skip customization for unsupported auth types
+				return;
+			}
 
 			UserResponse localUser = userService.loadUser(email);
+			if (localUser == null) {
+				return; // Skip if user not found
+			}
+			
 			context.getClaims().claims(existingClaims -> {
 				existingClaims.put("sub", localUser.getId()); //replace social login sub(Google) with local user ID
 				existingClaims.put("name", localUser.getName());
@@ -61,6 +76,18 @@ public final class FederatedIdentityIdTokenCustomizer implements OAuth2TokenCust
 			return ((OAuth2User) principal.getPrincipal()).getAttributes();
 		} else if (principal instanceof ShareCodeGrantAuthenticationToken) {
 			return ((ShareCodeGrantAuthenticationToken) principal).extractClaims();
+		}
+		else if (principal instanceof UsernamePasswordAuthenticationToken) {
+			// Handle form login - extract email from UserDetails
+			Object userDetails = principal.getPrincipal();
+			Map<String, Object> claims = new HashMap<>();
+
+			if (userDetails instanceof UserDetails) {
+				// For form login, username is typically the email
+				claims.put("email", ((UserDetails) userDetails).getUsername());
+			}
+
+			return claims;
 		}
 		return new HashMap<>();
 	}

@@ -2,6 +2,7 @@ package com.ginkgooai.core.identity.config.security;
 
 import com.ginkgooai.core.identity.dto.UserInfoAuthentication;
 import com.ginkgooai.core.identity.dto.response.UserResponse;
+import com.ginkgooai.core.identity.exception.ResourceNotFoundException;
 import com.ginkgooai.core.identity.handler.CustomLogoutSuccessHandler;
 import com.ginkgooai.core.identity.security.FederatedIdentityIdTokenCustomizer;
 import com.ginkgooai.core.identity.security.ShareCodeGrantAuthenticationConverter;
@@ -10,6 +11,7 @@ import com.ginkgooai.core.identity.service.ShareCodeService;
 import com.ginkgooai.core.identity.service.UserService;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -48,6 +50,7 @@ import java.util.function.Function;
 
 @Configuration
 @EnableWebSecurity
+@Slf4j
 public class AuthorizationServerConfig {
 
     @Autowired
@@ -152,14 +155,21 @@ public class AuthorizationServerConfig {
                         new OAuth2Error("invalid_token", "Email claim not found in token", null));
             }
 
-            UserResponse userResponse = userService.loadUser(email);
-            if (userResponse == null) {
-                throw new OAuth2AuthenticationException(
-                        new OAuth2Error("invalid_user", "User not found with email: " + email, null));
-            }
+			try {
+				UserResponse userResponse = userService.loadUser(email);
+				String sub = authorization.getAccessToken().getClaims().get("sub").toString();
+				return buildOidcUserInfo(userResponse, sub);
+			}
+			catch (ResourceNotFoundException e) {
+				// Log the error for debugging but don't interrupt the authentication flow
+				log.warn("User not found during UserInfo mapping for email: {}", email);
 
-            String sub = authorization.getAccessToken().getClaims().get("sub").toString();
-            return buildOidcUserInfo(userResponse, sub);
+				// Throw a standard OAuth2 authentication exception that will be handled
+				// by the framework
+				// to redirect users back to the login page with proper error handling
+				throw new OAuth2AuthenticationException(
+						new OAuth2Error("invalid_user", "User not found with email: " + email, null));
+			}
         };
     }
 

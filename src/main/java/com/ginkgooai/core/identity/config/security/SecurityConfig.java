@@ -57,292 +57,264 @@ import java.util.List;
 @AllArgsConstructor
 public class SecurityConfig {
 
-    private final UserRepository userRepository;
-    private final UserSocialConnectionRepository socialConnectionRepository;
+	private final UserRepository userRepository;
 
-    private final JwtAuthenticationConverter jwtAuthenticationConverter;
-    private final JwtDecoder jwtDecoder;
-    private final CustomOAuth2UserService customOAuth2UserService;
-    private final UserDetailsService userDetailsService;
-    private final DatabaseClientRegistrationRepository clientRegistrationRepository;
-    private final PasswordEncoder passwordEncoder;
+	private final UserSocialConnectionRepository socialConnectionRepository;
 
-    private final AdminIpFilter adminIpFilter;
-    private final AdminApiKeyFilter adminApiKeyFilter;
-    private final AdminRateLimitFilter adminRateLimitFilter;
-    private final MfaAuthenticationFilter mfaAuthenticationFilter;
+	private final JwtAuthenticationConverter jwtAuthenticationConverter;
 
+	private final JwtDecoder jwtDecoder;
 
-    @Bean
-    public UserRepositoryOAuth2UserHandler oauth2UserHandler() {
-        return new UserRepositoryOAuth2UserHandler(userRepository, socialConnectionRepository);
-    }
+	private final CustomOAuth2UserService customOAuth2UserService;
 
-    @Bean
-    public FederatedIdentityAuthenticationSuccessHandler authenticationSuccessHandler() {
-        FederatedIdentityAuthenticationSuccessHandler handler =
-                new FederatedIdentityAuthenticationSuccessHandler();
+	private final UserDetailsService userDetailsService;
 
-        handler.setOAuth2UserHandler(oauth2UserHandler());
-        handler.setOidcUserHandler(oidcUser -> oauth2UserHandler().accept(oidcUser));
+	private final DatabaseClientRegistrationRepository clientRegistrationRepository;
 
-        return handler;
-    }
-    
+	private final PasswordEncoder passwordEncoder;
 
-    @Bean
-    public AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository() {
-        return new HttpSessionOAuth2AuthorizationRequestRepository();
-    }
+	private final AdminIpFilter adminIpFilter;
 
-    @Bean
-    public OAuth2UserService<OidcUserRequest, OidcUser> oidcUserService() {
-        return new CustomOidcUserService(customOAuth2UserService);
-    }
+	private final AdminApiKeyFilter adminApiKeyFilter;
 
-    private HttpSecurity configureResourceServer(HttpSecurity http) throws Exception {
+	private final AdminRateLimitFilter adminRateLimitFilter;
 
-        http.oauth2ResourceServer(oauth2 -> oauth2
-                .jwt(jwt -> jwt
-                        .decoder(jwtDecoder)
-                        .jwtAuthenticationConverter(jwtAuthenticationConverter))
-                .authenticationEntryPoint((request, response, authException) -> {
-                    response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                    response.getWriter().write(String.format(
-                            "{\"error\": \"unauthorized\", \"message\": \"%s\"}",
-                            authException.getMessage()
-                    ));
-                }));
+	private final MfaAuthenticationFilter mfaAuthenticationFilter;
 
-        return http;
-    }
+	@Bean
+	public UserRepositoryOAuth2UserHandler oauth2UserHandler() {
+		return new UserRepositoryOAuth2UserHandler(userRepository, socialConnectionRepository);
+	}
 
-    @Bean
-    public SessionRegistry sessionRegistry() {
-        return new SessionRegistryImpl();
-    }
+	@Bean
+	public FederatedIdentityAuthenticationSuccessHandler authenticationSuccessHandler() {
+		FederatedIdentityAuthenticationSuccessHandler handler = new FederatedIdentityAuthenticationSuccessHandler();
 
-    @Bean
-    @Order(2)
-    public SecurityFilterChain adminApiSecurityFilterChain(HttpSecurity http) throws Exception {
-        return configureResourceServer(http)
-			.securityMatcher("/admin/**")
+		handler.setOAuth2UserHandler(oauth2UserHandler());
+		handler.setOidcUserHandler(oidcUser -> oauth2UserHandler().accept(oidcUser));
+
+		return handler;
+	}
+
+	@Bean
+	public AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository() {
+		return new HttpSessionOAuth2AuthorizationRequestRepository();
+	}
+
+	@Bean
+	public OAuth2UserService<OidcUserRequest, OidcUser> oidcUserService() {
+		return new CustomOidcUserService(customOAuth2UserService);
+	}
+
+	private HttpSecurity configureResourceServer(HttpSecurity http) throws Exception {
+
+		http.oauth2ResourceServer(oauth2 -> oauth2
+			.jwt(jwt -> jwt.decoder(jwtDecoder).jwtAuthenticationConverter(jwtAuthenticationConverter))
+			.authenticationEntryPoint((request, response, authException) -> {
+				response.setStatus(HttpStatus.UNAUTHORIZED.value());
+				response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+				response.getWriter()
+					.write(String.format("{\"error\": \"unauthorized\", \"message\": \"%s\"}",
+							authException.getMessage()));
+			}));
+
+		return http;
+	}
+
+	@Bean
+	public SessionRegistry sessionRegistry() {
+		return new SessionRegistryImpl();
+	}
+
+	@Bean
+	@Order(2)
+	public SecurityFilterChain adminApiSecurityFilterChain(HttpSecurity http) throws Exception {
+		return configureResourceServer(http).securityMatcher("/admin/**")
 			.cors(Customizer.withDefaults())
 			.csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(authorize -> authorize
-				.requestMatchers("/admin/**")
-				.permitAll()
-                )
-                .anonymous(anonymous -> anonymous.disable())
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                        .maximumSessions(1)
-                        .sessionRegistry(sessionRegistry())
-                )
-                // Add custom filters
-                .addFilterBefore(adminIpFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(adminApiKeyFilter, AdminIpFilter.class)
-                .addFilterAfter(adminRateLimitFilter, AdminApiKeyFilter.class)
-                // Exception handling
-                .exceptionHandling(exceptionHandling -> exceptionHandling
-                        .authenticationEntryPoint((request, response, authException) -> {
-                            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                            response.getWriter().write(String.format(
-                                    "{\"error\": \"Unauthorized\", \"message\": \"%s\"}",
-                                    authException.getMessage()
-                            ));
-                        })
-                        .accessDeniedHandler((request, response, accessDeniedException) -> {
-                            response.setStatus(HttpStatus.FORBIDDEN.value());
-                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                            response.getWriter().write(String.format(
-                                    "{\"error\": \"Forbidden\", \"message\": \"%s\"}",
-                                    accessDeniedException.getMessage()
-                            ));
-                        })
-                ).build();
-    }
+			.authorizeHttpRequests(authorize -> authorize.requestMatchers("/admin/**").permitAll())
+			.anonymous(anonymous -> anonymous.disable())
+			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+				.maximumSessions(1)
+				.sessionRegistry(sessionRegistry()))
+			// Add custom filters
+			.addFilterBefore(adminIpFilter, UsernamePasswordAuthenticationFilter.class)
+			.addFilterAfter(adminApiKeyFilter, AdminIpFilter.class)
+			.addFilterAfter(adminRateLimitFilter, AdminApiKeyFilter.class)
+			// Exception handling
+			.exceptionHandling(exceptionHandling -> exceptionHandling
+				.authenticationEntryPoint((request, response, authException) -> {
+					response.setStatus(HttpStatus.UNAUTHORIZED.value());
+					response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+					response.getWriter()
+						.write(String.format("{\"error\": \"Unauthorized\", \"message\": \"%s\"}",
+								authException.getMessage()));
+				})
+				.accessDeniedHandler((request, response, accessDeniedException) -> {
+					response.setStatus(HttpStatus.FORBIDDEN.value());
+					response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+					response.getWriter()
+						.write(String.format("{\"error\": \"Forbidden\", \"message\": \"%s\"}",
+								accessDeniedException.getMessage()));
+				}))
+			.build();
+	}
 
-
-    @Bean
-    @Order(3)
-    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http, TokenRevocationLogoutHandler tokenRevocationLogoutHandler) throws Exception {
-        return configureResourceServer(http)
-                .cors(Customizer.withDefaults())
-                .csrf(csrf -> csrf
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-				.ignoringRequestMatchers("/oauth2/authorize")
-                )
-                .authorizeHttpRequests(authorize -> authorize
-                        //View endpoint
+	@Bean
+	@Order(3)
+	public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http,
+			TokenRevocationLogoutHandler tokenRevocationLogoutHandler) throws Exception {
+		return configureResourceServer(http).cors(Customizer.withDefaults())
+			.csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+				.ignoringRequestMatchers("/oauth2/authorize"))
+			.authorizeHttpRequests(authorize -> authorize
+				// View endpoint
 				.requestMatchers("/static/**", "/static/images/**", "/.well-known/**")
 				.permitAll()
-                        //OAuth2 endpoints
-                        .requestMatchers("/oauth2/authorize",
-//                                "oauth2/consent",
-                                "/connect/logout",
-                                "/api/oauth2/clients",
-                                "/oauth2/token",
-                                "/login",
-                                "/logout",
-                                "/reset-password",
-                                "/verify-email")
-                        .permitAll()
-                        //Swagger endpoints
-                        .requestMatchers(
-                                "/api/identity/v3/api-docs",
-                                "/api/identity/swagger-ui.html",
-                                "/api/identity/swagger-ui/**",
-                                "/v3/api-docs",
-                                "/swagger-ui.html",
-                                "/swagger-ui/**",
-                                "/webjars/**"
-                        ).permitAll()
-                        //health endpoints
-                        .requestMatchers(
-                                "/health"
-                        ).permitAll()
-                        //API endpoints
-                        .requestMatchers(HttpMethod.POST, "/users").permitAll()
-                        .requestMatchers(HttpMethod.PATCH, "/users/*/email/verification").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/users/password-resets").permitAll()
-                        .requestMatchers(HttpMethod.PATCH, "/users/password-resets/*").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/users/me").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/users").authenticated()
-                        .anyRequest().hasAnyRole("USER", "ADMIN")
-                )
-                .oauth2Login(oauth2 -> oauth2
-                        .loginPage("/login")
-                        .clientRegistrationRepository(clientRegistrationRepository)
-                        .userInfoEndpoint(userInfo -> userInfo
-                                .userService(customOAuth2UserService)
-                                .oidcUserService(oidcUserService())
-                        )
-                        .successHandler(authenticationSuccessHandler())
-                )
-                .oauth2Client(oauth2Client -> oauth2Client
-                        .authorizationCodeGrant(codeGrant -> codeGrant
-                                .authorizationRequestRepository(authorizationRequestRepository())
-                        )
-                )
-                .formLogin(form -> form
-                        .loginPage("/login")
+				// OAuth2 endpoints
+				.requestMatchers("/oauth2/authorize",
+						// "oauth2/consent",
+						"/connect/logout", "/api/oauth2/clients", "/oauth2/token", "/login", "/logout",
+						"/reset-password", "/verify-email")
+				.permitAll()
+				// Swagger endpoints
+				.requestMatchers("/api/identity/v3/api-docs", "/api/identity/swagger-ui.html",
+						"/api/identity/swagger-ui/**", "/v3/api-docs", "/swagger-ui.html", "/swagger-ui/**",
+						"/webjars/**")
+				.permitAll()
+				// health endpoints
+				.requestMatchers("/health")
+				.permitAll()
+				// API endpoints
+				.requestMatchers(HttpMethod.POST, "/users")
+				.permitAll()
+				.requestMatchers(HttpMethod.PATCH, "/users/*/email/verification")
+				.permitAll()
+				.requestMatchers(HttpMethod.POST, "/users/password-resets")
+				.permitAll()
+				.requestMatchers(HttpMethod.PATCH, "/users/password-resets/*")
+				.permitAll()
+				.requestMatchers(HttpMethod.GET, "/users/me")
+				.authenticated()
+				.requestMatchers(HttpMethod.GET, "/users")
+				.authenticated()
+				.anyRequest()
+				.hasAnyRole("USER", "ADMIN"))
+			.oauth2Login(oauth2 -> oauth2.loginPage("/login")
+				.clientRegistrationRepository(clientRegistrationRepository)
+				.userInfoEndpoint(
+						userInfo -> userInfo.userService(customOAuth2UserService).oidcUserService(oidcUserService()))
+				.successHandler(authenticationSuccessHandler()))
+			.oauth2Client(oauth2Client -> oauth2Client.authorizationCodeGrant(
+					codeGrant -> codeGrant.authorizationRequestRepository(authorizationRequestRepository())))
+			.formLogin(form -> form.loginPage("/login")
 				.loginProcessingUrl("/login")
-                        .usernameParameter("email")
-                        .passwordParameter("password")
+				.usernameParameter("email")
+				.passwordParameter("password")
 				.failureUrl("/login?error=true")
-                        .permitAll()
-                )
+				.permitAll())
 			.rememberMe(Customizer.withDefaults())
-                .addFilterBefore(mfaAuthenticationFilter,  UsernamePasswordAuthenticationFilter.class)
-                .logout(logout -> logout
-                        .logoutUrl("/logout")
-                        .logoutSuccessHandler(oidcLogoutSuccessHandler())
-                        .addLogoutHandler(tokenRevocationLogoutHandler)
-                        .invalidateHttpSession(true)
-                        .clearAuthentication(true)
-                        .deleteCookies("JSESSIONID")
-                        .deleteCookies("SESSION")
-                        .permitAll()
-                )
-                .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint(new ProblemDetailsAuthenticationEntryPoint())
-                        .accessDeniedHandler(new ProblemDetailsAuthenticationEntryPoint())
-                )
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt
-                                .jwtAuthenticationConverter(
-                                        jwtAuthenticationConverter())))
-                .build();
-    }
+			.addFilterAfter(mfaAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+			.logout(logout -> logout.logoutUrl("/logout")
+				.logoutSuccessHandler(oidcLogoutSuccessHandler())
+				.addLogoutHandler(tokenRevocationLogoutHandler)
+				.invalidateHttpSession(true)
+				.clearAuthentication(true)
+				.deleteCookies("JSESSIONID")
+				.deleteCookies("SESSION")
+				.permitAll())
+			.exceptionHandling(
+					exceptions -> exceptions.authenticationEntryPoint(new ProblemDetailsAuthenticationEntryPoint())
+						.accessDeniedHandler(new ProblemDetailsAuthenticationEntryPoint()))
+			.oauth2ResourceServer(
+					oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
+			.build();
+	}
 
-    public JwtAuthenticationConverter jwtAuthenticationConverter() {
-        JwtAuthenticationConverter jwtConverter = new JwtAuthenticationConverter();
+	public JwtAuthenticationConverter jwtAuthenticationConverter() {
+		JwtAuthenticationConverter jwtConverter = new JwtAuthenticationConverter();
 
-        jwtConverter.setPrincipalClaimName("email");
-        jwtConverter.setJwtGrantedAuthoritiesConverter(jwt -> {
-            Collection<GrantedAuthority> authorities = new ArrayList<>();
-            List<String> roles = getClaimAsList(jwt, "role");
-            if (roles != null) {
-                for (String role : roles) {
-                    authorities.add(new SimpleGrantedAuthority(role.toUpperCase()));
-                }
-            }
+		jwtConverter.setPrincipalClaimName("email");
+		jwtConverter.setJwtGrantedAuthoritiesConverter(jwt -> {
+			Collection<GrantedAuthority> authorities = new ArrayList<>();
+			List<String> roles = getClaimAsList(jwt, "role");
+			if (roles != null) {
+				for (String role : roles) {
+					authorities.add(new SimpleGrantedAuthority(role.toUpperCase()));
+				}
+			}
 
-            List<String> scopes = getClaimAsList(jwt, "scope");
-            if (scopes != null) {
-                for (String scope : scopes) {
-                    authorities.add(new SimpleGrantedAuthority(scope));
-                }
-            }
+			List<String> scopes = getClaimAsList(jwt, "scope");
+			if (scopes != null) {
+				for (String scope : scopes) {
+					authorities.add(new SimpleGrantedAuthority(scope));
+				}
+			}
 
-            return authorities;
-        });
+			return authorities;
+		});
 
-        return jwtConverter;
-    }
+		return jwtConverter;
+	}
 
-    private List<String> getClaimAsList(Jwt jwt, String claimName) {
-        Object claimValue = jwt.getClaim(claimName);
+	private List<String> getClaimAsList(Jwt jwt, String claimName) {
+		Object claimValue = jwt.getClaim(claimName);
 
-        if (claimValue == null) {
-            return null;
-        }
+		if (claimValue == null) {
+			return null;
+		}
 
-        if (claimValue instanceof List) {
-            return (List<String>) claimValue;
-        }
+		if (claimValue instanceof List) {
+			return (List<String>) claimValue;
+		}
 
-        if (claimValue instanceof String) {
-            return List.of(((String) claimValue).split(" "));
-        }
+		if (claimValue instanceof String) {
+			return List.of(((String) claimValue).split(" "));
+		}
 
-        return null;
-    }
+		return null;
+	}
 
-    @Bean
-    public AuthenticationManager authenticationManager() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(userDetailsService);
-        provider.setPasswordEncoder(passwordEncoder);
-        return new ProviderManager(provider);
-    }
+	@Bean
+	public AuthenticationManager authenticationManager() {
+		DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+		provider.setUserDetailsService(userDetailsService);
+		provider.setPasswordEncoder(passwordEncoder);
+		return new ProviderManager(provider);
+	}
 
-    @Bean
-    public OAuth2AuthorizationRequestResolver authorizationRequestResolver(
-            ClientRegistrationRepository clientRegistrationRepository) {
-        DefaultOAuth2AuthorizationRequestResolver resolver =
-                new DefaultOAuth2AuthorizationRequestResolver(
-                        clientRegistrationRepository,
-                        OAuth2AuthorizationRequestRedirectFilter.DEFAULT_AUTHORIZATION_REQUEST_BASE_URI);
+	@Bean
+	public OAuth2AuthorizationRequestResolver authorizationRequestResolver(
+			ClientRegistrationRepository clientRegistrationRepository) {
+		DefaultOAuth2AuthorizationRequestResolver resolver = new DefaultOAuth2AuthorizationRequestResolver(
+				clientRegistrationRepository,
+				OAuth2AuthorizationRequestRedirectFilter.DEFAULT_AUTHORIZATION_REQUEST_BASE_URI);
 
-        resolver.setAuthorizationRequestCustomizer(customizer ->
-                customizer.additionalParameters(params -> {
-                    params.put("prompt", "select_account");
-                    params.put("access_type", "offline");
-                })
-        );
+		resolver.setAuthorizationRequestCustomizer(customizer -> customizer.additionalParameters(params -> {
+			params.put("prompt", "select_account");
+			params.put("access_type", "offline");
+		}));
 
-        return resolver;
-    }
+		return resolver;
+	}
 
-    @Bean
-    public LogoutSuccessHandler oidcLogoutSuccessHandler() {
-        OidcClientInitiatedLogoutSuccessHandler logoutSuccessHandler =
-                new OidcClientInitiatedLogoutSuccessHandler(clientRegistrationRepository);
+	@Bean
+	public LogoutSuccessHandler oidcLogoutSuccessHandler() {
+		OidcClientInitiatedLogoutSuccessHandler logoutSuccessHandler = new OidcClientInitiatedLogoutSuccessHandler(
+				clientRegistrationRepository);
 
-        logoutSuccessHandler.setPostLogoutRedirectUri("{baseUrl}/login");
+		logoutSuccessHandler.setPostLogoutRedirectUri("{baseUrl}/login");
 
-        return (request, response, authentication) -> {
-            if ("XMLHttpRequest".equals(request.getHeader("X-Requested-With"))) {
-                response.setStatus(HttpServletResponse.SC_OK);
-                response.setContentType("application/json");
-                response.getWriter().write("{\"redirectUrl\": \"/login\"}");
-            } else {
-                logoutSuccessHandler.onLogoutSuccess(request, response, authentication);
-            }
-        };
-    }
+		return (request, response, authentication) -> {
+			if ("XMLHttpRequest".equals(request.getHeader("X-Requested-With"))) {
+				response.setStatus(HttpServletResponse.SC_OK);
+				response.setContentType("application/json");
+				response.getWriter().write("{\"redirectUrl\": \"/login\"}");
+			}
+			else {
+				logoutSuccessHandler.onLogoutSuccess(request, response, authentication);
+			}
+		};
+	}
+
 }
